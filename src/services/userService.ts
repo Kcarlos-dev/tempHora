@@ -28,6 +28,30 @@ const userService = {
 
     await cacheClient.setEx(cacheKey, 60 * 5, JSON.stringify(result));
     return result;
+  },
+
+  async createUser(data: { email: string; password: string; name: string; role?: string }) {
+    const { email, password, name, role = 'user' } = data;
+
+    const existingUser = await userModel.findByEmail(email);
+
+    if (existingUser) {
+      throw new AppError('Usuário com este email já existe.', 409);
+    }
+
+    const user = await userModel.create({
+      email,
+      password,
+      name,
+      role
+    });
+
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role
+    };
   }
 };
 
