@@ -1,63 +1,195 @@
-# API JWT MySQL Redis
+# TempHora API
 
-Esta é uma API RESTful desenvolvida em Node.js com TypeScript, utilizando JWT para autenticação, MySQL como banco de dados principal e Redis para cache. O projeto segue uma arquitetura modular e organizada para facilitar manutenção e escalabilidade.
+API REST em Node.js + TypeScript para gestão de usuários, empresas, colaboradores, ponto e atestados.
 
-## Arquitetura
+## Stack
 
-A aplicação é estruturada em camadas, promovendo separação de responsabilidades:
+- Node.js + Express
+- TypeScript
+- MySQL (`mysql2`)
+- Redis (cache)
+- JWT (autenticação)
+- Jest (testes)
 
-- **src/app.ts**: Configuração principal do Express (middlewares, rotas, etc.).
-- **src/server.ts**: Ponto de entrada da aplicação, inicia o servidor.
-- **src/routes/**: Definição das rotas da API. O arquivo `index.ts` orquestra as rotas principais (`auth` e `user`).
-- **src/controllers/**: Controladores que lidam com as requisições HTTP, chamando serviços apropriados.
-- **src/services/**: Lógica de negócio, interagindo com modelos e cache.
-- **src/models/**: Interfaces e funções para acesso ao banco de dados MySQL.
-- **src/middlewares/**: Middlewares para autenticação (`authMiddleware`), autorização baseada em roles (`roleMiddleware`), logging (`requestLogger`) e tratamento de erros (`errorHandler`).
-- **src/config/**: Configurações para banco de dados (`database.ts`), JWT (`jwt.ts`), cache Redis (`cache.ts`) e logger (`logger.ts`).
-- **src/types/express/**: Extensões de tipos TypeScript para Express (ex.: propriedade `user` em `Request`).
-- **src/utils/**: Utilitários, como classe de erro customizada (`AppError.ts`).
-- **src/tests/**: Testes unitários para serviços e controladores.
+## Estrutura do projeto
 
-### Fluxo de Requisição
-1. Requisição chega em `app.ts` via `/api`.
-2. Middlewares globais (helmet, cors, JSON parsing, logging) são aplicados.
-3. Rota específica é resolvida em `routes/index.ts` (ex.: `/auth/login` vai para `authController`).
-4. Controlador valida entrada e chama serviço.
-5. Serviço interage com modelo (MySQL) ou cache (Redis), aplicando lógica de negócio.
-6. Resposta é retornada, com tratamento de erros via `errorHandler`.
-
-### Autenticação e Autorização
-- **JWT**: Tokens gerados no login, verificados em middlewares.
-- **Roles**: Usuários têm roles ('root', 'adm', 'user'). Middlewares como `roleMiddleware` restringem acesso baseado em roles.
+```txt
+src/
+  app.ts
+  server.ts
+  config/
+  controllers/
+  middlewares/
+  models/
+  routes/
+  services/
+  tests/
+  types/
+  utils/
+sql/
+  queries.sql
+  procedures.sql
+```
 
 ## Pré-requisitos
-- Node.js (versão 18+)
-- MySQL
+
+- Node.js 18+
+- MySQL 8+
 - Redis
-- npm ou yarn
+- npm
+
+## Configuração de ambiente
+
+Crie um arquivo `.env` na raiz do projeto com:
+
+```env
+PORT=4000
+
+JWT_SECRET=change_this_secret
+JWT_EXPIRES_IN=1h
+
+MYSQL_HOST=127.0.0.1
+MYSQL_PORT=3306
+MYSQL_USER=root
+MYSQL_PASSWORD=
+MYSQL_DATABASE=temphora
+
+REDIS_HOST=127.0.0.1
+REDIS_PORT=6379
+REDIS_PASSWORD=
+```
+
+## Banco de dados
+
+Use o arquivo `sql/queries.sql` como base para:
+
+- criar o banco/tabelas
+- inserir dados de exemplo
+- consultar dados para validação
 
 ## Instalação
-1. Clone o repositório.
-2. Instale dependências: `npm install`.
-3. Configure o banco MySQL e Redis (veja `src/config/database.ts` e `src/config/cache.ts`).
-4. Crie a tabela `users` com colunas: `id` (INT AUTO_INCREMENT PRIMARY KEY), `name` (VARCHAR), `email` (VARCHAR UNIQUE), `password_hash` (VARCHAR), `role` (ENUM('root', 'adm', 'user')).
-5. Configure variáveis de ambiente (se aplicável) para JWT secret, DB credentials, etc.
+
+```bash
+npm install
+```
 
 ## Execução
-- Desenvolvimento: `npm run dev` (usa ts-node-dev).
-- Produção: `npm run build` e `npm start`.
+
+### Desenvolvimento
+
+```bash
+npm run dev
+```
+
+Servidor padrão: `http://localhost:4000`
+
+### Produção
+
+```bash
+npm run build
+npm start
+```
+
+## Scripts disponíveis
+
+- `npm run dev` - inicia em modo desenvolvimento
+- `npm run build` - compila TypeScript
+- `npm start` - roda build compilado
+- `npm test` - executa testes
+- `npm run test:watch` - testes em watch mode
+
+## Autenticação e autorização
+
+- A API usa JWT no header:
+  - `Authorization: Bearer <token>`
+- Login:
+  - `POST /api/auth/login`
+- Rotas protegidas usam:
+  - `authMiddleware` (valida token)
+  - `roleMiddleware` (valida perfil)
+
+Perfis usados atualmente:
+
+- `root`
+- `admin`
+- `rh`
+- `colaborador`
+- `user`
+
+## Rotas da API
+
+Base: `/api`
+
+### Auth
+
+- `POST /auth/login`
+
+### User
+
+- `GET /user` (autenticado)
+- `POST /user` (admin/root)
+
+### Empresa
+
+- `GET /empresa`
+- `GET /empresa/:id`
+- `POST /empresa` (admin/root/rh)
+- `PUT /empresa/:id` (admin/root/rh)
+- `DELETE /empresa/:id` (admin/root)
+
+### Colaborador
+
+- `GET /colaborador`
+- `GET /colaborador/:id`
+- `POST /colaborador` (admin/root/rh)
+- `PUT /colaborador/:id` (admin/root/rh)
+- `PATCH /colaborador/:id/status` (admin/root/rh)
+
+### Ponto
+
+- `GET /ponto`
+- `GET /ponto/:id`
+- `POST /ponto` (admin/root/rh/colaborador)
+- `PUT /ponto/:id` (admin/root/rh)
+- `DELETE /ponto/:id` (admin/root)
+
+### Atestado
+
+- `GET /atestado`
+- `GET /atestado/:id`
+- `POST /atestado` (admin/root/rh/colaborador)
+- `PUT /atestado/:id` (admin/root/rh)
+- `DELETE /atestado/:id` (admin/root)
+
+> Observação: no cadastro de atestado, `status` pode ser enviado; se não for enviado, o padrão é `pendente`.
+
+## Exemplo rápido de uso
+
+### 1) Login
+
+```bash
+curl -X POST "http://localhost:4000/api/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "admin@temphora.com",
+    "password": "123456"
+  }'
+```
+
+### 2) Usar token em rota protegida
+
+```bash
+curl -X GET "http://localhost:4000/api/empresa" \
+  -H "Authorization: Bearer SEU_TOKEN_AQUI"
+```
+
+## Tratamento de erros
+
+- Erros de validação e negócio retornam status HTTP apropriado com mensagem.
+- Erros não tratados retornam `500`.
 
 ## Testes
-- Execute: `npm test` (usa Jest).
 
-## Tecnologias
-- Express.js
-- TypeScript
-- MySQL2
-- Redis
-- bcrypt
-- jsonwebtoken
-- Jest
-- Helmet, CORS, etc.
-
-Para dúvidas ou contribuições, consulte os arquivos de código ou abra uma issue.
+```bash
+npm test
+```

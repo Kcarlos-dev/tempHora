@@ -8,6 +8,6 @@ const router = Router();
 router.get('/', authMiddleware, getUser);
 
 // Rota para criar usuário - apenas admin e root
-router.post('/', authMiddleware, roleMiddleware(['admin', 'root']), createUser);
+router.post('/', authMiddleware, roleMiddleware(['admin', 'root','rh']), createUser);
 
 export default router;
