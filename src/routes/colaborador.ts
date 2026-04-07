@@ -16,7 +16,7 @@ router.use(authMiddleware);
 
 router.get('/empresa/:id_empresa',roleMiddleware(['admin', 'root', 'rh']), listColaboradores);
 router.get('/user/:cpf', getColaboradorByCpf);
-router.post('/', [roleMiddleware(['admin', 'root', 'rh']),checkCompany], createColaborador);
+router.post('/', roleMiddleware(['admin', 'root', 'rh']), createColaborador);
 router.put('/:id', roleMiddleware(['admin', 'root', 'rh']), updateColaborador);
 router.patch('/:id/status', roleMiddleware(['admin', 'root', 'rh']), updateColaboradorStatus);
 
