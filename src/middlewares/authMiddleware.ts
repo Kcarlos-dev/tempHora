@@ -11,7 +11,7 @@ interface TokenPayload {
 
 const checkCompany = async (req: Request, res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization;
-    const empresa = req.body.id_empresa;
+    const empresa = req.params.id_empresa;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({ message: 'Token não fornecido.' });

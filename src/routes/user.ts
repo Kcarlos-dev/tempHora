@@ -5,9 +5,9 @@ import roleMiddleware from '../middlewares/roleMiddleware';
 
 const router = Router();
 
-router.get('/', authMiddleware, getUser);
+router.get('/', authMiddleware,roleMiddleware(['root']), getUser);
 
 // Rota para criar usuário - apenas admin e root
-router.post('/', authMiddleware, roleMiddleware(['admin', 'root','rh']), createUser);
+router.post('/:id_empresa', authMiddleware, roleMiddleware(['admin', 'root','rh']), createUser);
 
 export default router;
