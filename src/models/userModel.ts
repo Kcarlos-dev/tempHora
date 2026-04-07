@@ -4,6 +4,9 @@ import pool from '../config/database';
 
 export interface UserRecord {
   id: number;
+  id_user:number,
+  id_empresa: number,
+  id_colaborador:number,
   name: string;
   email: string;
   password_hash: string;
@@ -13,7 +16,7 @@ export interface UserRecord {
 const userModel = {
   async findByEmail(email: string): Promise<UserRecord | null> {
     const [rows] = await pool.execute<RowDataPacket[]>(
-      'SELECT id, name, email, password_hash, role FROM users WHERE email = ?',
+      'SELECT id_user,id_empresa,id_colaborador,email,password_hash,role FROM vw_users_colaboradores WHERE 1 = 1 AND email = ?',
       [email]
     );
 

@@ -4,12 +4,14 @@ import checkCompanyModel from '../models/checkCompanyModel'
 
 
 interface TokenPayload {
-    userId: number;
-    email: string;
-    role: string;
+    userId: number,
+    empresaId: number,
+    colaboradorId: number,
+    email: string,
+    role: string,
   }
 
-const checkCompany = async (req: Request, res: Response, next: NextFunction) => {
+const checkCompany =  (req: Request, res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization;
     const empresa = req.params.id_empresa;
 
@@ -27,8 +29,8 @@ const checkCompany = async (req: Request, res: Response, next: NextFunction) => 
       if (!empresa){
           return res.status(403).json({ message: 'Empresa não fornecida.' });
       }
-      const  id_empresa_tb = await checkCompanyModel.findById(payload.userId)
-      if(Number(id_empresa_tb)  === Number(empresa)){
+
+      if(Number(payload.empresaId)  === Number(empresa)){
           req.user = { id: payload.userId, email: payload.email, role: payload.role };
           return next();
       }else{

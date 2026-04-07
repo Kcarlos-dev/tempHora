@@ -5,12 +5,10 @@ import { createPonto, deletePonto, getPontoById, listPontos, updatePonto } from 
 
 const router = Router();
 
-router.use(authMiddleware);
-
 //router.get('/', listPontos);
-router.get('/:id', getPontoById);
-router.post('/', roleMiddleware(['admin', 'root', 'rh', 'colaborador']), createPonto);
-router.put('/:id', roleMiddleware(['admin', 'root', 'rh']), updatePonto);
-router.delete('/:id', roleMiddleware(['admin', 'root']), deletePonto);
+router.get('/:id_empresa/:id_colaborador',authMiddleware, getPontoById);
+router.post('/:id_empresa/:id_colaborador',authMiddleware, roleMiddleware(['admin', 'root', 'rh', 'colaborador']), createPonto);
+router.put('/:id_empresa/:id',authMiddleware, roleMiddleware(['admin', 'root', 'rh']), updatePonto);
+router.delete('/:id_empresa/:id',authMiddleware, roleMiddleware(['admin', 'root']), deletePonto);
 
 export default router;
