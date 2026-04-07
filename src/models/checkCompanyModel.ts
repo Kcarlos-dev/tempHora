@@ -8,8 +8,10 @@ const checkCompanyModel = {
           'SELECT id_empresa FROM colaborador WHERE id_user = ? LIMIT 1',
           [id]
         );
-      
-        return rows[0]["id_empresa"];
+        if (!rows.length) {
+          return null;
+        }
+        return rows[0].id_empresa as number;
       }
 }
 export default checkCompanyModel;

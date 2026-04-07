@@ -1,5 +1,6 @@
 import { verifyToken } from '../config/jwt';
-import { Request, Response, NextFunction } from 'express';import checkCompanyModel from '../models/checkCompanyModel'
+import { Request, Response, NextFunction } from 'express';
+import checkCompanyModel from '../models/checkCompanyModel'
 
 
 interface TokenPayload {
@@ -15,16 +16,16 @@ const checkCompany = async (req: Request, res: Response, next: NextFunction) => 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({ message: 'Token não fornecido.' });
     }
-    if (!empresa){
-        return res.status(401).json({ message: 'Empresa não fornecida.' });
-    }
     const token = authHeader.replace('Bearer ', '');
-  
+    
     try {
       const payload = verifyToken(token) as TokenPayload;
       if(payload.role === "root"){
         req.user = { id: payload.userId, email: payload.email, role: payload.role };
         return next();
+      }
+      if (!empresa){
+          return res.status(403).json({ message: 'Empresa não fornecida.' });
       }
       const  id_empresa_tb = await checkCompanyModel.findById(payload.userId)
       if(Number(id_empresa_tb)  === Number(empresa)){
