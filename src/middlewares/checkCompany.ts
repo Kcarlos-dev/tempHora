@@ -22,11 +22,14 @@ const checkCompany = async (req: Request, res: Response, next: NextFunction) => 
   
     try {
       const payload = verifyToken(token) as TokenPayload;
+      if(payload.role === "root"){
+        req.user = { id: payload.userId, email: payload.email, role: payload.role };
+        return next();
+      }
       const  id_empresa_tb = await checkCompanyModel.findById(payload.userId)
-      console.log(id_empresa_tb)
       if(Number(id_empresa_tb)  === Number(empresa)){
           req.user = { id: payload.userId, email: payload.email, role: payload.role };
-          next();
+          return next();
       }else{
         return res.status(401).json({ message: 'Empresa inválida.' });
       }
