@@ -15,8 +15,8 @@ router.use(authMiddleware);
 
 router.get('/', listEmpresas);
 router.get('/:id', getEmpresaById);
-router.post('/', roleMiddleware(['admin', 'root', 'rh']), createEmpresa);
+router.post('/', roleMiddleware(['root']), createEmpresa);
 router.put('/:id', roleMiddleware(['admin', 'root', 'rh']), updateEmpresa);
-router.delete('/:id', roleMiddleware(['admin', 'root']), deleteEmpresa);
+router.delete('/:id', roleMiddleware(['root']), deleteEmpresa);
 
 export default router;
