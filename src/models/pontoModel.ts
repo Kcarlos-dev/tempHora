@@ -22,7 +22,7 @@ const pontoModel = {
 
   async findById(id: number): Promise<PontoRecord | null> {
     const [rows] = await pool.execute<RowDataPacket[]>(
-      'SELECT id, id_colaborador, tipo, data_hora, latitude, longitude, foto FROM ponto WHERE id = ?',
+      'SELECT id, id_colaborador, tipo, data_hora, latitude, longitude, foto FROM ponto WHERE id_colaborador = ?',
       [id]
     );
 

@@ -7,7 +7,7 @@ const router = Router();
 
 //router.get('/', listPontos);
 router.get('/:id_empresa/:id_colaborador',authMiddleware, getPontoById);
-router.post('/:id_empresa/:id_colaborador',authMiddleware, roleMiddleware(['admin', 'root', 'rh', 'colaborador']), createPonto);
+router.post('/:id_empresa',authMiddleware, roleMiddleware(['admin', 'root', 'rh', 'colaborador']), createPonto);
 router.put('/:id_empresa/:id',authMiddleware, roleMiddleware(['admin', 'root', 'rh']), updatePonto);
 router.delete('/:id_empresa/:id',authMiddleware, roleMiddleware(['admin', 'root']), deletePonto);
 

@@ -12,7 +12,7 @@ export async function listPontos(req: Request, res: Response, next: NextFunction
 
 export async function getPontoById(req: Request, res: Response, next: NextFunction) {
   try {
-    const id = Number(req.params.id);
+    const id = Number(req.params.id_colaborador);
     const ponto = await pontoService.getById(id);
     return res.json(ponto);
   } catch (error) {

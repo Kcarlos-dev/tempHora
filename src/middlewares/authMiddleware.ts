@@ -29,7 +29,14 @@ const checkCompany =  (req: Request, res: Response, next: NextFunction) => {
       if (!empresa){
           return res.status(403).json({ message: 'Empresa não fornecida.' });
       }
-
+      if(req.body.id_colaborador){
+         if(Number(req.body.id_colaborador) !== payload.colaboradorId){
+            return res.status(200).json({message: 'id do colaborador incoerente' })
+         }
+         req.user = { id: payload.userId, email: payload.email, role: payload.role };
+         return next();   
+      }
+      
       if(Number(payload.empresaId)  === Number(empresa)){
           req.user = { id: payload.userId, email: payload.email, role: payload.role };
           return next();
