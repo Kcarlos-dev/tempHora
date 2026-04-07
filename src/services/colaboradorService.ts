@@ -4,10 +4,20 @@ import AppError from '../utils/AppError';
 const ALLOWED_STATUS = ['ativo', 'inativo'];
 
 const colaboradorService = {
-  async list() {
-    return colaboradorModel.findAll();
+  async list(id_empresa:number) {
+    return colaboradorModel.findAll(id_empresa);
   },
 
+  async getByCpf(cpf:string) {
+    const colaborador = await colaboradorModel.findByCpf(cpf);
+
+    if (!colaborador) {
+      throw new AppError('Colaborador não encontrado.', 404);
+    }
+
+    return colaborador;
+  },
+  
   async getById(id: number) {
     const colaborador = await colaboradorModel.findById(id);
 

@@ -3,17 +3,18 @@ import colaboradorService from '../services/colaboradorService';
 
 export async function listColaboradores(req: Request, res: Response, next: NextFunction) {
   try {
-    const colaboradores = await colaboradorService.list();
+    const id_empresa = Number(req.params.id_empresa)
+    const colaboradores = await colaboradorService.list(id_empresa);
     return res.json(colaboradores);
   } catch (error) {
     next(error);
   }
 }
 
-export async function getColaboradorById(req: Request, res: Response, next: NextFunction) {
+export async function getColaboradorByCpf(req: Request, res: Response, next: NextFunction) {
   try {
-    const id = Number(req.params.id);
-    const colaborador = await colaboradorService.getById(id);
+    const cpf:string = req.params.cpf ;
+    const colaborador = await colaboradorService.getByCpf(cpf);
     return res.json(colaborador);
   } catch (error) {
     next(error);

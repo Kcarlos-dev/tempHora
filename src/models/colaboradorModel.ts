@@ -13,9 +13,9 @@ export interface ColaboradorRecord {
 }
 
 const colaboradorModel = {
-  async findAll(): Promise<ColaboradorRecord[]> {
+  async findAll(id_empresa:number): Promise<ColaboradorRecord[]> {
     const [rows] = await pool.execute<RowDataPacket[]>(
-      'SELECT id, id_empresa, id_user, full_name, cpf, phone, position, status FROM colaborador ORDER BY id DESC'
+      'SELECT id, id_empresa, id_user, full_name, cpf, phone, position, status FROM colaborador WHERE id_empresa = ?',[id_empresa]
     );
 
     return rows as ColaboradorRecord[];
@@ -26,10 +26,18 @@ const colaboradorModel = {
       'SELECT id, id_empresa, id_user, full_name, cpf, phone, position, status FROM colaborador WHERE id = ?',
       [id]
     );
+    
+    return rows.length ? (rows[0] as ColaboradorRecord) : null;
+  },
+  
+  async findByCpf(cpf:string): Promise<ColaboradorRecord | null> {
+    const [rows] = await pool.execute<RowDataPacket[]>(
+      'SELECT id, id_empresa, id_user, full_name, cpf, phone, position, status FROM colaborador WHERE cpf = ?',
+      [cpf]
+    );
 
     return rows.length ? (rows[0] as ColaboradorRecord) : null;
   },
-
   async create(data: Omit<ColaboradorRecord, 'id'>): Promise<ColaboradorRecord> {
     const [result] = await pool.execute<ResultSetHeader>(
       `INSERT INTO colaborador
