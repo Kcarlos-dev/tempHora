@@ -13,7 +13,7 @@ const router = Router();
 
 router.use(authMiddleware);
 
-router.get('/', listColaboradores);
+router.get('/',roleMiddleware(['admin', 'root', 'rh']), listColaboradores);
 router.get('/:id', getColaboradorById);
 router.post('/', roleMiddleware(['admin', 'root', 'rh']), createColaborador);
 router.put('/:id', roleMiddleware(['admin', 'root', 'rh']), updateColaborador);

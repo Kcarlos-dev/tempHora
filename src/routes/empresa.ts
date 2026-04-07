@@ -13,7 +13,7 @@ const router = Router();
 
 router.use(authMiddleware);
 
-router.get('/', listEmpresas);
+//router.get('/', listEmpresas);
 router.get('/:id', getEmpresaById);
 router.post('/', roleMiddleware(['root']), createEmpresa);
 router.put('/:id', roleMiddleware(['admin', 'root', 'rh']), updateEmpresa);

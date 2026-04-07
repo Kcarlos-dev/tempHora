@@ -13,7 +13,7 @@ const router = Router();
 
 router.use(authMiddleware);
 
-router.get('/', listAtestados);
+//router.get('/', listAtestados);
 router.get('/:id', getAtestadoById);
 router.post('/', roleMiddleware(['admin', 'root', 'rh', 'colaborador']), createAtestado);
 router.put('/:id', roleMiddleware(['admin', 'root', 'rh']), updateAtestado);
