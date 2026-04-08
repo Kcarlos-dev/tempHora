@@ -36,7 +36,13 @@ const checkCompany =  (req: Request, res: Response, next: NextFunction) => {
          req.user = { id: payload.userId, email: payload.email, role: payload.role };
          return next();   
       }
-      
+      if(req.params.id_colaborador){
+        if(Number(req.params.id_colaborador) !== payload.colaboradorId){
+           return res.status(403).json({message: 'id do colaborador incoerente' })
+        }
+        req.user = { id: payload.userId, email: payload.email, role: payload.role };
+        return next();   
+     }
       if(Number(payload.empresaId)  === Number(empresa)){
           req.user = { id: payload.userId, email: payload.email, role: payload.role };
           return next();

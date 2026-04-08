@@ -19,11 +19,12 @@ export async function getUser(req: Request, res: Response, next: NextFunction) {
 export async function createUser(req: Request, res: Response, next: NextFunction) {
   try {
     const { email, password, name, role } = req.body;
-
     if (!email || !password || !name) {
       return res.status(400).json({ message: 'Email, senha e nome são obrigatórios.' });
+    } 
+    if(role === "root"){
+      return res.status(400).json({ message: 'root não é permitido' });
     }
-
     const user = await userService.createUser({ email, password, name, role });
     return res.status(201).json({ message: 'Usuário criado com sucesso.', user });
   } catch (error) {

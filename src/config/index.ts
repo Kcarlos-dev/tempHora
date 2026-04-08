@@ -4,12 +4,26 @@ dotenv.config();
 
 const env = process.env;
 
+if (!env.JWT_SECRET) {
+  throw new Error(
+    'FATAL: A variável de ambiente JWT_SECRET não foi definida. ' +
+    'A aplicação não pode iniciar sem um segredo JWT seguro.'
+  );
+}
+
+const VALID_EXPIRES_IN_PATTERN = /^\d+[smhd]$/;
+if (env.JWT_EXPIRES_IN && !VALID_EXPIRES_IN_PATTERN.test(env.JWT_EXPIRES_IN)) {
+  throw new Error(
+    `FATAL: JWT_EXPIRES_IN inválido: "${env.JWT_EXPIRES_IN}". Use formatos como: 15m, 1h, 7d.`
+  );
+}
+
 const config = {
   server: {
     port: Number(env.PORT || 4000)
   },
   jwt: {
-    secret: env.JWT_SECRET || 'change_this_secret',
+    secret: env.JWT_SECRET,
     expiresIn: env.JWT_EXPIRES_IN || '1h'
   },
   mysql: {
@@ -23,6 +37,11 @@ const config = {
     host: env.REDIS_HOST || '127.0.0.1',
     port: Number(env.REDIS_PORT || 6379),
     password: env.REDIS_PASSWORD || undefined
+  },
+  cors: {
+    allowedOrigins: env.ALLOWED_ORIGINS
+      ? env.ALLOWED_ORIGINS.split(',')
+      : ['http://localhost:3000']
   }
 };
 

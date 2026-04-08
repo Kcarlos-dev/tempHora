@@ -9,5 +9,5 @@ export default function errorHandler(err: Error, req: Request, res: Response, ne
     return res.status(err.statusCode).json({ message: err.message });
   }
 
-  return res.status(500).json({ message: err.message || 'Erro interno no servidor.' });
+  return res.status(500).json({ message: 'Erro interno no servidor.' });
 }
