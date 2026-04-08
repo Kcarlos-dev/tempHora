@@ -12,7 +12,7 @@ export async function listEmpresas(req: Request, res: Response, next: NextFuncti
 
 export async function getEmpresaById(req: Request, res: Response, next: NextFunction) {
   try {
-    const id = Number(req.params.id);
+    const id = Number(req.params.id_empresa);
     const empresa = await empresaService.getById(id);
     return res.json(empresa);
   } catch (error) {
@@ -37,7 +37,7 @@ export async function createEmpresa(req: Request, res: Response, next: NextFunct
 
 export async function updateEmpresa(req: Request, res: Response, next: NextFunction) {
   try {
-    const id = Number(req.params.id);
+    const id = Number(req.params.id_empresa);
     const { enterprise, cnpj, email, phone } = req.body;
 
     if (!enterprise || !cnpj || !email) {
@@ -53,7 +53,7 @@ export async function updateEmpresa(req: Request, res: Response, next: NextFunct
 
 export async function deleteEmpresa(req: Request, res: Response, next: NextFunction) {
   try {
-    const id = Number(req.params.id);
+    const id = Number(req.params.id_empresa);
     await empresaService.remove(id);
     return res.status(204).send();
   } catch (error) {

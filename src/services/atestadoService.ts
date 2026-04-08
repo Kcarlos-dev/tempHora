@@ -8,6 +8,16 @@ const atestadoService = {
     return atestadoModel.findAll();
   },
 
+  async getByIdColaborador(id: number) {
+    const atestado = await atestadoModel.findByIdColaborador(id);
+
+    if (!atestado) {
+      throw new AppError('Atestado não encontrado.', 404);
+    }
+
+    return atestado;
+  },
+  
   async getById(id: number) {
     const atestado = await atestadoModel.findById(id);
 

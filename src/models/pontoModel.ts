@@ -20,9 +20,18 @@ const pontoModel = {
     return rows as PontoRecord[];
   },
 
-  async findById(id: number): Promise<PontoRecord | null> {
+  async findByIdColaborador(id: number): Promise<PontoRecord[]> {
     const [rows] = await pool.execute<RowDataPacket[]>(
       'SELECT id, id_colaborador, tipo, data_hora, latitude, longitude, foto FROM ponto WHERE id_colaborador = ?',
+      [id]
+    );
+
+    return rows as PontoRecord[];
+  },
+
+  async findById(id: number): Promise<PontoRecord | null> {
+    const [rows] = await pool.execute<RowDataPacket[]>(
+      'SELECT id, id_colaborador, tipo, data_hora, latitude, longitude, foto FROM ponto WHERE id = ?',
       [id]
     );
 

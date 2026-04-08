@@ -11,12 +11,11 @@ import {
 
 const router = Router();
 
-router.use(authMiddleware);
 
 //router.get('/', listEmpresas);
-router.get('/:id', getEmpresaById);
-router.post('/', roleMiddleware(['root']), createEmpresa);
-router.put('/:id', roleMiddleware(['admin', 'root', 'rh']), updateEmpresa);
-router.delete('/:id', roleMiddleware(['root']), deleteEmpresa);
+router.get('/:id_empresa',authMiddleware, getEmpresaById);
+router.post('/',authMiddleware, roleMiddleware(['root']), createEmpresa);
+router.put('/:id_empresa',authMiddleware, roleMiddleware(['admin', 'root', 'rh']), updateEmpresa);
+router.delete('/:id_empresa',authMiddleware, roleMiddleware(['root']), deleteEmpresa);
 
 export default router;

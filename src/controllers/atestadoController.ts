@@ -10,10 +10,10 @@ export async function listAtestados(req: Request, res: Response, next: NextFunct
   }
 }
 
-export async function getAtestadoById(req: Request, res: Response, next: NextFunction) {
+export async function getAtestadoByIdColaborador(req: Request, res: Response, next: NextFunction) {
   try {
-    const id = Number(req.params.id);
-    const atestado = await atestadoService.getById(id);
+    const id = Number(req.params.id_colaborador);
+    const atestado = await atestadoService.getByIdColaborador(id);
     return res.json(atestado);
   } catch (error) {
     next(error);

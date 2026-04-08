@@ -19,6 +19,15 @@ const atestadoModel = {
     return rows as AtestadoRecord[];
   },
 
+  async findByIdColaborador(id: number): Promise<AtestadoRecord[]> {
+    const [rows] = await pool.execute<RowDataPacket[]>(
+      'SELECT id, id_colaborador, data_inicio, data_fim, arquivo, status FROM atestados WHERE id_colaborador = ?',
+      [id]
+    );
+
+    return rows as AtestadoRecord[];
+  },
+
   async findById(id: number): Promise<AtestadoRecord | null> {
     const [rows] = await pool.execute<RowDataPacket[]>(
       'SELECT id, id_colaborador, data_inicio, data_fim, arquivo, status FROM atestados WHERE id = ?',
