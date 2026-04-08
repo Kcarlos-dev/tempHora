@@ -11,12 +11,13 @@ export interface UserRecord {
   email: string;
   password_hash: string;
   role: string;
+  status:string
 }
 
 const userModel = {
   async findByEmail(email: string): Promise<UserRecord | null> {
     const [rows] = await pool.execute<RowDataPacket[]>(
-      'SELECT id_user,id_empresa,id_colaborador,email,password_hash,role FROM vw_users_colaboradores WHERE 1 = 1 AND email = ?',
+      'SELECT id_user,id_empresa,id_colaborador,email,password_hash,role, status FROM vw_users_colaboradores WHERE 1 = 1 AND email = ?',
       [email]
     );
 

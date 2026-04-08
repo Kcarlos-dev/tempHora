@@ -17,7 +17,7 @@ const authService = {
       throw new AppError('Usuário ou senha inválidos.', 401);
     }
 
-    return signToken({ userId: user.id_user,empresaId:user.id_empresa,colaboradorId:user.id_colaborador, email: user.email, role: user.role });
+    return signToken({ userId: user.id_user,empresaId:user.id_empresa,colaboradorId:user.id_colaborador, email: user.email, role: user.role,status:user.status });
   }
 };
 

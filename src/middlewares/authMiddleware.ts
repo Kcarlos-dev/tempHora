@@ -9,6 +9,7 @@ interface TokenPayload {
     colaboradorId: number,
     email: string,
     role: string,
+    status:string
   }
 
 const checkCompany =  (req: Request, res: Response, next: NextFunction) => {
@@ -22,6 +23,12 @@ const checkCompany =  (req: Request, res: Response, next: NextFunction) => {
     
     try {
       const payload = verifyToken(token) as TokenPayload;
+      if(!payload.status && payload.role != "root"){
+        return res.status(403).json({message:'Você não está cadastrado em nenhuma empresa'})
+      }
+      if(payload.status === "inativo"){
+        return res.status(403).json({message:'Você não está em atividade'})
+      }
       if(payload.role === "root"){
         req.user = { id: payload.userId, email: payload.email, role: payload.role };
         return next();
