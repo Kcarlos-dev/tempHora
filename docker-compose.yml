@@ -14,4 +14,4 @@ services:
     env_file:
       - .env
     restart: unless-stopped
-    command: npm run dev
+    command: npm run ${NODE_ENV_SCRIPT}
