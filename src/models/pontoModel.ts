@@ -20,6 +20,27 @@ const pontoModel = {
     return rows as PontoRecord[];
   },
 
+  async findByIdCsv(id:number): Promise<PontoRecord[]>{
+    const [rows] = await pool.execute<RowDataPacket[]>(
+      `
+      select p.id_colaborador,
+              c.cpf,
+              c.full_name,
+              c.position,
+              p.tipo,
+              p.latitude,
+              p.longitude,
+              p.data_hora
+        from ponto p
+        left join temphora.colaborador c on p.id_colaborador = c.id
+        where id_colaborador = ?
+      `,
+      [id]
+    );
+
+    return rows as PontoRecord[];
+  },
+
   async findByIdColaborador(id: number): Promise<PontoRecord[]> {
     const [rows] = await pool.execute<RowDataPacket[]>(
       'SELECT id, id_colaborador, tipo, data_hora, latitude, longitude, foto FROM ponto WHERE id_colaborador = ?',

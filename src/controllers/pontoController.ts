@@ -1,3 +1,4 @@
+import { Parser } from "json2csv";
 import { NextFunction, Request, Response } from 'express';
 import pontoService from '../services/pontoService';
 
@@ -7,6 +8,26 @@ export async function listPontos(req: Request, res: Response, next: NextFunction
     return res.json(pontos);
   } catch (error) {
     next(error);
+  }
+}
+
+export async function getCsvPontoColaborador(req: Request, res: Response, next: NextFunction) {
+  try {
+    const id = Number(req.params.id_colaborador);
+    const ponto = await pontoService.getCsvByIdColaborador(id);
+    
+    if(ponto.length <= 0){
+        res.status(401).json({message:'Não possue ponto registrado'})
+    }
+    const parser = new Parser();
+    const csv = parser.parse(ponto);
+
+    res.header("Content-Type", "text/csv");
+    res.attachment(`ponto_${id}.csv`);
+
+    return res.send(csv);
+  } catch (error) {
+    next(error)
   }
 }
 

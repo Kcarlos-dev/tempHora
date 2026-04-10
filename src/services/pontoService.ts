@@ -8,6 +8,16 @@ const pontoService = {
     return pontoModel.findAll();
   },
 
+  async getCsvByIdColaborador(id:number){
+    const ponto = await pontoModel.findByIdCsv(id)
+
+    if (!ponto) {
+      throw new AppError('Registro de ponto não encontrado.', 404);
+    }
+    
+    return ponto;
+  },
+
   async getByIdColaborador(id: number) {
     const ponto = await pontoModel.findByIdColaborador(id);
 
