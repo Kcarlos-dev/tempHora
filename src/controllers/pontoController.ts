@@ -14,7 +14,14 @@ export async function listPontos(req: Request, res: Response, next: NextFunction
 export async function getCsvPontoColaborador(req: Request, res: Response, next: NextFunction) {
   try {
     const id = Number(req.params.id_colaborador);
-    const ponto = await pontoService.getCsvByIdColaborador(id);
+    const data_inicial:string = req.params.data_inicial
+    const data_final:string = req.params.data_final
+
+    if(data_final.length <= 0 || data_inicial.length <= 0){
+      res.status(400).json({message:'É preciso colocar uma data final e inicial'})
+    }
+
+    const ponto = await pontoService.getCsvByIdColaborador(id,data_inicial,data_final);
     
     if(ponto.length <= 0){
         res.status(401).json({message:'Não possue ponto registrado'})

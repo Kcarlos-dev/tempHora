@@ -6,7 +6,7 @@ import { createPonto, deletePonto, getPontoByIdColaborador, getCsvPontoColaborad
 const router = Router();
 
 //router.get('/', listPontos);
-router.get('/planilha/:id_empresa/:id_colaborador',authMiddleware,getCsvPontoColaborador)
+router.get('/planilha/:id_empresa/:id_colaborador/:data_inicial/:data_final',authMiddleware,getCsvPontoColaborador)
 router.get('/:id_empresa/:id_colaborador',authMiddleware, getPontoByIdColaborador);
 router.post('/:id_empresa',authMiddleware, roleMiddleware(['admin', 'root', 'rh', 'colaborador']), createPonto);
 router.put('/:id_empresa/:id',authMiddleware, roleMiddleware(['admin', 'root', 'rh']), updatePonto);
