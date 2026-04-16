@@ -5,10 +5,30 @@ import { NextFunction, Request, Response } from 'express';
 import pontoService from '../services/pontoService';
 import { bucket } from '../config/storage';
 
+const SIGNED_URL_EXPIRATION = 60 * 60 * 1000; // 1 hora
+
+async function generateSignedUrl(gcsPath: string): Promise<string> {
+  const filePath = gcsPath.replace(`gs://${bucket.name}/`, '');
+  const [url] = await bucket.file(filePath).getSignedUrl({
+    action: 'read',
+    expires: Date.now() + SIGNED_URL_EXPIRATION,
+  });
+  return url;
+}
+
+async function attachFotoUrl<T extends { foto?: string | null }>(ponto: T): Promise<T & { foto_url: string | null }> {
+  const foto_url = ponto.foto ? await generateSignedUrl(ponto.foto) : null;
+  return { ...ponto, foto_url };
+}
+
+async function attachFotoUrls<T extends { foto?: string | null }>(pontos: T[]): Promise<(T & { foto_url: string | null })[]> {
+  return Promise.all(pontos.map(p => attachFotoUrl(p)));
+}
+
 export async function listPontos(req: Request, res: Response, next: NextFunction) {
   try {
     const pontos = await pontoService.list();
-    return res.json(pontos);
+    return res.json(await attachFotoUrls(pontos));
   } catch (error) {
     next(error);
   }
@@ -44,8 +64,8 @@ export async function getCsvPontoColaborador(req: Request, res: Response, next: 
 export async function getPontoByIdColaborador(req: Request, res: Response, next: NextFunction) {
   try {
     const id = Number(req.params.id_colaborador);
-    const ponto = await pontoService.getByIdColaborador(id);
-    return res.json(ponto);
+    const pontos = await pontoService.getByIdColaborador(id);
+    return res.json(await attachFotoUrls(pontos));
   } catch (error) {
     next(error);
   }
@@ -83,7 +103,7 @@ export async function createPonto(req: Request, res: Response, next: NextFunctio
       foto: fotoUrl,
     });
 
-    return res.status(201).json(ponto);
+    return res.status(201).json(await attachFotoUrl(ponto));
   } catch (error) {
     next(error);
   }
