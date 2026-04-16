@@ -31,7 +31,13 @@ const config = {
     port: Number(env.MYSQL_PORT || 3306),
     user: env.MYSQL_USER || 'root',
     password: env.MYSQL_PASSWORD || '',
-    database: env.MYSQL_DATABASE || 'app_db'
+    database: env.MYSQL_DATABASE || 'app_db',
+
+    ssl:
+      env.MYSQL_SSL === 'true' ||
+      env.MYSQL_SSL === '1' ||
+      env.MYSQL_SSL === 'yes',
+    sslRejectUnauthorized: env.MYSQL_SSL_REJECT_UNAUTHORIZED === 'true',
   },
   redis: {
     host: env.REDIS_HOST || '127.0.0.1',

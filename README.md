@@ -113,6 +113,8 @@ Variáveis principais:
 | `JWT_SECRET` | Segredo para assinatura JWT |
 | `JWT_EXPIRES_IN` | Expiração do token (ex.: `1h`, `15m`, `7d`) |
 | `MYSQL_*` | Host, porta, usuário, senha e nome do banco |
+| `MYSQL_SSL` | `true` / `1` / `yes` para TLS (ex.: Cloud SQL “somente SSL”) |
+| `MYSQL_SSL_REJECT_UNAUTHORIZED` | `true` para validar certificado do servidor (exige CA no cliente) |
 | `REDIS_*` | Host, porta e senha opcional do Redis |
 | `GCS_PROJECT_ID` | ID do projeto GCP |
 | `GCS_KEY_FILENAME` | Caminho da chave de serviço (apenas local; no Cloud Run usar ADC) |
@@ -167,12 +169,13 @@ gcloud run deploy temphora \
   --image gcr.io/SEU_PROJECT_ID/temphora \
   --platform managed \
   --region southamerica-east1 \
-  --set-env-vars "JWT_SECRET=...,MYSQL_HOST=...,MYSQL_USER=...,MYSQL_PASSWORD=...,MYSQL_DATABASE=temphora,GCS_BUCKET_NAME=...,REDIS_HOST=..." \
+  --set-env-vars "JWT_SECRET=...,MYSQL_HOST=...,MYSQL_USER=...,MYSQL_PASSWORD=...,MYSQL_DATABASE=temphora,MYSQL_SSL=true,GCS_BUCKET_NAME=...,REDIS_HOST=..." \
   --allow-unauthenticated
 ```
 
 ### Notas sobre Cloud Run
 
+- **MySQL / Cloud SQL:** Com a opção **“Permitir somente conexões SSL”**, defina `MYSQL_SSL=true`. Com SSL ativo, o padrão é `rejectUnauthorized: false` (certificado gerenciado pelo Google), a menos que `MYSQL_SSL_REJECT_UNAUTHORIZED=true` e você configure validação de CA no cliente.
 - **GCS:** Não é necessário configurar `GCS_KEY_FILENAME`. O SDK usa automaticamente as credenciais da service account do Cloud Run (Application Default Credentials). Basta conceder o papel `Storage Object Admin` à service account.
 - **MySQL:** Se usar Cloud SQL, adicione `--add-cloudsql-instances INSTANCE_CONNECTION_NAME` ao comando de deploy.
 - **Redis:** Se usar Memorystore, configure um VPC connector com `--vpc-connector`.

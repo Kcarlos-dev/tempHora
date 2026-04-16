@@ -1,7 +1,7 @@
-import mysql from 'mysql2/promise';
+import mysql, { PoolOptions } from 'mysql2/promise';
 import config from './index';
 
-const pool = mysql.createPool({
+const poolOptions: PoolOptions = {
   host: config.mysql.host,
   port: config.mysql.port,
   user: config.mysql.user,
@@ -9,7 +9,15 @@ const pool = mysql.createPool({
   database: config.mysql.database,
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
-});
+  queueLimit: 0,
+};
+
+if (config.mysql.ssl) {
+  poolOptions.ssl = {
+    rejectUnauthorized: config.mysql.sslRejectUnauthorized,
+  };
+}
+
+const pool = mysql.createPool(poolOptions);
 
 export default pool;
