@@ -1,11 +1,15 @@
-import { Storage } from '@google-cloud/storage';
+import { Storage, StorageOptions } from '@google-cloud/storage';
 import config from './index';
 
-const storage = new Storage({
-  projectId: config.gcs.projectId,
-  keyFilename: config.gcs.keyFilename,
-});
+const options: StorageOptions = {
+  projectId: config.gcs.projectId || undefined,
+};
 
+if (config.gcs.keyFilename) {
+  options.keyFilename = config.gcs.keyFilename;
+}
+
+const storage = new Storage(options);
 const bucket = storage.bucket(config.gcs.bucketName);
 
 export { storage, bucket };

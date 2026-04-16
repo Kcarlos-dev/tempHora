@@ -114,17 +114,34 @@ Variáveis principais:
 | `JWT_EXPIRES_IN` | Expiração do token (ex.: `1h`, `15m`, `7d`) |
 | `MYSQL_*` | Host, porta, usuário, senha e nome do banco |
 | `REDIS_*` | Host, porta e senha opcional do Redis |
-| `GCS_*` | Projeto, caminho da chave de serviço e bucket |
+| `GCS_PROJECT_ID` | ID do projeto GCP |
+| `GCS_KEY_FILENAME` | Caminho da chave de serviço (apenas local; no Cloud Run usar ADC) |
+| `GCS_BUCKET_NAME` | Nome do bucket GCS |
 | `ALLOWED_ORIGINS` | Origens CORS separadas por vírgula (opcional) |
 
 ## Como executar
+
+### Desenvolvimento local (sem Docker)
 
 ```bash
 npm install
 npm run dev
 ```
 
-Build e produção:
+### Desenvolvimento local (com Docker Compose)
+
+```bash
+docker-compose up
+```
+
+### Rodar com Docker (usando o Dockerfile)
+
+```bash
+docker build -t temphora .
+docker run -p 4000:4000 --env-file .env temphora
+```
+
+### Build e produção (sem Docker)
 
 ```bash
 npm run build
@@ -132,6 +149,33 @@ npm start
 ```
 
 A API escuta em `http://localhost:<PORT>` (veja `PORT` no `.env`).
+
+## Deploy no Cloud Run
+
+O projeto inclui um `Dockerfile` multi-stage otimizado para produção.
+
+### Build e push da imagem
+
+```bash
+gcloud builds submit --tag gcr.io/SEU_PROJECT_ID/temphora
+```
+
+### Deploy
+
+```bash
+gcloud run deploy temphora \
+  --image gcr.io/SEU_PROJECT_ID/temphora \
+  --platform managed \
+  --region southamerica-east1 \
+  --set-env-vars "JWT_SECRET=...,MYSQL_HOST=...,MYSQL_USER=...,MYSQL_PASSWORD=...,MYSQL_DATABASE=temphora,GCS_BUCKET_NAME=...,REDIS_HOST=..." \
+  --allow-unauthenticated
+```
+
+### Notas sobre Cloud Run
+
+- **GCS:** Não é necessário configurar `GCS_KEY_FILENAME`. O SDK usa automaticamente as credenciais da service account do Cloud Run (Application Default Credentials). Basta conceder o papel `Storage Object Admin` à service account.
+- **MySQL:** Se usar Cloud SQL, adicione `--add-cloudsql-instances INSTANCE_CONNECTION_NAME` ao comando de deploy.
+- **Redis:** Se usar Memorystore, configure um VPC connector com `--vpc-connector`.
 
 ## Comportamento da API
 
@@ -181,7 +225,7 @@ Todas abaixo são relativas a `/api`.
 |--------|---------|----------|
 | GET | `/ponto/planilha/:id_empresa/:id_colaborador/:data_inicial/:data_final` | JWT (exportação CSV) |
 | GET | `/ponto/:id_empresa/:id_colaborador` | JWT |
-| POST | `/ponto/:id_empresa` | JWT, `admin`, `root`, `rh` ou `colaborador`; upload opcional de campo `foto` |
+| POST | `/ponto/:id_empresa` | JWT, `admin`, `root`, `rh` ou `colaborador`; `multipart/form-data` com campo `foto` (arquivo obrigatório, enviado ao GCS) |
 | PUT | `/ponto/:id_empresa/:id` | JWT, `admin`, `root` ou `rh` |
 | DELETE | `/ponto/:id_empresa/:id` | JWT, `admin` ou `root` |
 
@@ -196,13 +240,21 @@ Todas abaixo são relativas a `/api`.
 
 ## Estrutura do código (visão geral)
 
-- `src/server.ts` — entrada do servidor
-- `src/app.ts` — Express, middlewares globais e montagem de `/api`
-- `src/routes/` — rotas por domínio
-- `src/controllers/` — handlers HTTP
-- `src/services/` — regras de negócio
-- `src/models/` — acesso a dados MySQL
-- `src/middlewares/` — autenticação JWT, papéis, empresa, upload, erros
-- `src/config/` — configuração, banco, cache, JWT, storage, logs
-
-Logs rotativos podem ser gravados em `logs/` conforme a configuração do logger.
+```
+├── Dockerfile              # Build multi-stage para produção / Cloud Run
+├── .dockerignore           # Arquivos excluídos da imagem Docker
+├── docker-compose.yml      # Ambiente de desenvolvimento local
+├── .env.example            # Modelo de variáveis de ambiente
+├── src/
+│   ├── server.ts           # Entrada do servidor
+│   ├── app.ts              # Express, middlewares globais e montagem de /api
+│   ├── routes/             # Rotas por domínio
+│   ├── controllers/        # Handlers HTTP
+│   ├── services/           # Regras de negócio
+│   ├── models/             # Acesso a dados MySQL
+│   ├── middlewares/         # Auth JWT, roles, empresa, upload (multer), erros
+│   ├── config/             # Configuração, banco, cache, JWT, storage GCS, logs
+│   ├── utils/              # Classes utilitárias (AppError)
+│   └── tests/              # Testes automatizados
+└── logs/                   # Logs rotativos (gerados em runtime)
+```

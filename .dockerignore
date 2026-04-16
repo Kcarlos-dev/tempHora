@@ -1,0 +1,17 @@
+node_modules
+dist
+.env
+.env.*
+google-credentials.json
+logs
+*.log
+.git
+.gitignore
+.vscode
+.idea
+coverage
+.nyc_output
+docker-compose.yml
+README.md
+*.md
+src/tests
