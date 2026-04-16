@@ -41,13 +41,13 @@ export async function getCsvPontoColaborador(req: Request, res: Response, next: 
     const data_final:string = req.params.data_final
 
     if(data_final.length <= 0 || data_inicial.length <= 0){
-      res.status(400).json({message:'É preciso colocar uma data final e inicial'})
+      return res.status(400).json({message:'É preciso colocar uma data final e inicial'})
     }
 
     const ponto = await pontoService.getCsvByIdColaborador(id,data_inicial,data_final);
     
     if(ponto.length <= 0){
-        res.status(401).json({message:'Não possue ponto registrado'})
+        return res.status(401).json({message:'Não possue ponto registrado'})
     }
     const parser = new Parser();
     const csv = parser.parse(ponto);
