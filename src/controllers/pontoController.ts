@@ -1,6 +1,9 @@
+import crypto from 'crypto';
+import path from 'path';
 import { Parser } from "json2csv";
 import { NextFunction, Request, Response } from 'express';
 import pontoService from '../services/pontoService';
+import { bucket } from '../config/storage';
 
 export async function listPontos(req: Request, res: Response, next: NextFunction) {
   try {
@@ -50,11 +53,26 @@ export async function getPontoByIdColaborador(req: Request, res: Response, next:
 
 export async function createPonto(req: Request, res: Response, next: NextFunction) {
   try {
-    const { id_colaborador, tipo, data_hora, latitude, longitude, foto } = req.body;
-
+    const { id_colaborador, tipo, data_hora, latitude, longitude } = req.body;
+    const file = req.file;
+ 
+    if (!file) {
+      return res.status(400).json({ message: 'foto é obrigatório.' });
+    }
     if (!id_colaborador || !tipo || !data_hora) {
       return res.status(400).json({ message: 'id_colaborador, tipo e data_hora são obrigatórios.' });
     }
+
+    const ext = path.extname(file.originalname) || '.jpg';
+    const filename = `pontos/${id_colaborador}/${Date.now()}_${crypto.randomUUID()}${ext}`;
+
+    const blob = bucket.file(filename);
+    await blob.save(file.buffer, {
+      contentType: file.mimetype,
+      resumable: false,
+    });
+
+    const fotoUrl = `gs://${bucket.name}/${filename}`;
 
     const ponto = await pontoService.create({
       id_colaborador: Number(id_colaborador),
@@ -62,7 +80,7 @@ export async function createPonto(req: Request, res: Response, next: NextFunctio
       data_hora,
       latitude: latitude !== undefined ? Number(latitude) : null,
       longitude: longitude !== undefined ? Number(longitude) : null,
-      foto
+      foto: fotoUrl,
     });
 
     return res.status(201).json(ponto);

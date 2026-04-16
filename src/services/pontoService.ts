@@ -1,7 +1,7 @@
 import pontoModel from '../models/pontoModel';
 import AppError from '../utils/AppError';
 
-const ALLOWED_TIPOS = ['entrada', 'saida'];
+
 
 const pontoService = {
   async list() {
@@ -46,9 +46,6 @@ const pontoService = {
     longitude?: number | null;
     foto?: string | null;
   }) {
-    if (!ALLOWED_TIPOS.includes(data.tipo)) {
-      throw new AppError('Tipo de ponto inválido. Use "entrada" ou "saida".', 400);
-    }
 
     return pontoModel.create({
       id_colaborador: data.id_colaborador,
@@ -73,9 +70,6 @@ const pontoService = {
   ) {
     await this.getById(id);
 
-    if (!ALLOWED_TIPOS.includes(data.tipo)) {
-      throw new AppError('Tipo de ponto inválido. Use "entrada" ou "saida".', 400);
-    }
 
     const updated = await pontoModel.update(id, {
       id_colaborador: data.id_colaborador,

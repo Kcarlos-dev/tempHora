@@ -38,6 +38,11 @@ const config = {
     port: Number(env.REDIS_PORT || 6379),
     password: env.REDIS_PASSWORD || undefined
   },
+  gcs: {
+    projectId: env.GCS_PROJECT_ID || '',
+    keyFilename: env.GCS_KEY_FILENAME || '',
+    bucketName: env.GCS_BUCKET_NAME || '',
+  },
   cors: {
     allowedOrigins: env.ALLOWED_ORIGINS
       ? env.ALLOWED_ORIGINS.split(',')
