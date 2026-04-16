@@ -1,195 +1,208 @@
-# TempHora API
+# Temphora
 
-API REST em Node.js + TypeScript para gestão de usuários, empresas, colaboradores, ponto e atestados.
+API REST em TypeScript para gestão de empresas, colaboradores, registro de ponto e atestados. Usa autenticação JWT, MySQL como banco principal, Redis para cache e Google Cloud Storage para armazenamento de arquivos (fotos de ponto e documentos).
 
-## Stack
+## Requisitos
 
-- Node.js + Express
-- TypeScript
-- MySQL (`mysql2`)
-- Redis (cache)
-- JWT (autenticação)
-- Jest (testes)
-
-## Estrutura do projeto
-
-```txt
-src/
-  app.ts
-  server.ts
-  config/
-  controllers/
-  middlewares/
-  models/
-  routes/
-  services/
-  tests/
-  types/
-  utils/
-sql/
-  queries.sql
-  procedures.sql
-```
-
-## Pré-requisitos
-
-- Node.js 18+
-- MySQL 8+
-- Redis
-- npm
-
-## Configuração de ambiente
-
-Crie um arquivo `.env` na raiz do projeto com:
-
-```env
-PORT=4000
-
-JWT_SECRET=change_this_secret
-JWT_EXPIRES_IN=1h
-
-MYSQL_HOST=127.0.0.1
-MYSQL_PORT=3306
-MYSQL_USER=root
-MYSQL_PASSWORD=
-MYSQL_DATABASE=temphora
-
-REDIS_HOST=127.0.0.1
-REDIS_PORT=6379
-REDIS_PASSWORD=
-```
+- Node.js (versão compatível com o TypeScript do projeto)
+- MySQL com o schema e tabelas definidos para o projeto
+- Redis em execução (conforme variáveis de ambiente)
+- Conta/projeto GCP com bucket configurado, se for usar upload para o GCS
 
 ## Banco de dados
 
-Use o arquivo `sql/queries.sql` como base para:
+Schema de referência: **`temphora`**. Ajuste `MYSQL_DATABASE` no `.env` para o banco onde o script abaixo for executado (crie o schema antes, se necessário: `CREATE DATABASE temphora;` e `USE temphora;`).
 
-- criar o banco/tabelas
-- inserir dados de exemplo
-- consultar dados para validação
+```sql
+create table users
+(
+    id            int auto_increment
+        primary key,
+    name          varchar(255) not null,
+    email         varchar(255) not null,
+    password_hash varchar(255) not null,
+    role          varchar(50)  not null,
+    constraint uq_user_email
+        unique (email)
+);
 
-## Instalação
+create table empresa
+(
+    id         int auto_increment
+        primary key,
+    enterprise varchar(255) not null,
+    cnpj       varchar(255) not null,
+    email      varchar(255) not null,
+    phone      varchar(255) null,
+    constraint uq_empresa_cnpj
+        unique (cnpj)
+);
+
+create table colaborador
+(
+    id         int auto_increment
+        primary key,
+    id_empresa int                                                              not null,
+    id_user    int                                                              not null,
+    full_name  varchar(255)                                                     not null,
+    cpf        varchar(255)                                                     null,
+    phone      varchar(255)                                                     null,
+    position   varchar(255)                                                     null,
+    status     enum ('inativo', 'ativo', 'ferias', 'desligado') default 'ativo' null,
+    constraint colaborador_pk
+        unique (cpf),
+    constraint fk_colaborador_empresa
+        foreign key (id_empresa) references empresa (id),
+    constraint fk_colaborador_user
+        foreign key (id_user) references users (id)
+);
+
+create table ponto
+(
+    id             int auto_increment
+        primary key,
+    id_colaborador int            not null,
+    tipo           varchar(255)   not null,
+    data_hora      datetime       not null,
+    latitude       decimal(10, 8) null,
+    longitude      decimal(11, 8) null,
+    foto           longtext       null,
+    constraint fk_ponto_colaborador
+        foreign key (id_colaborador) references colaborador (id)
+);
+
+create table atestados
+(
+    id             int auto_increment
+        primary key,
+    id_colaborador int                             not null,
+    data_inicio    datetime                        not null,
+    data_fim       datetime                        not null,
+    arquivo        varchar(255)                    null,
+    status         varchar(255) default 'pendente' not null,
+    constraint fk_atestado_colaborador
+        foreign key (id_colaborador) references colaborador (id)
+);
+
+create view vw_users_colaboradores as
+select `u`.`id`            AS `id_user`,
+       `c`.`id_empresa`    AS `id_empresa`,
+       `c`.`id`            AS `id_colaborador`,
+       `u`.`email`         AS `email`,
+       `u`.`password_hash` AS `password_hash`,
+       `u`.`role`          AS `role`,
+       `c`.`status`        AS `status`
+from (`temphora`.`users` `u` left join `temphora`.`colaborador` `c` on ((`u`.`id` = `c`.`id_user`)));
+```
+
+## Configuração
+
+1. Copie o exemplo de ambiente:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Preencha pelo menos `JWT_SECRET` (obrigatório para subir a aplicação), credenciais MySQL, Redis e, se usar uploads no GCS, `GCS_PROJECT_ID`, `GCS_KEY_FILENAME` e `GCS_BUCKET_NAME`.
+
+Variáveis principais:
+
+| Variável | Descrição |
+|----------|-----------|
+| `PORT` | Porta HTTP (padrão `4000`) |
+| `JWT_SECRET` | Segredo para assinatura JWT |
+| `JWT_EXPIRES_IN` | Expiração do token (ex.: `1h`, `15m`, `7d`) |
+| `MYSQL_*` | Host, porta, usuário, senha e nome do banco |
+| `REDIS_*` | Host, porta e senha opcional do Redis |
+| `GCS_*` | Projeto, caminho da chave de serviço e bucket |
+| `ALLOWED_ORIGINS` | Origens CORS separadas por vírgula (opcional) |
+
+## Como executar
 
 ```bash
 npm install
-```
-
-## Execução
-
-### Desenvolvimento
-
-```bash
 npm run dev
 ```
 
-Servidor padrão: `http://localhost:4000`
-
-### Produção
+Build e produção:
 
 ```bash
 npm run build
 npm start
 ```
 
-## Scripts disponíveis
+A API escuta em `http://localhost:<PORT>` (veja `PORT` no `.env`).
 
-- `npm run dev` - inicia em modo desenvolvimento
-- `npm run build` - compila TypeScript
-- `npm start` - roda build compilado
-- `npm test` - executa testes
-- `npm run test:watch` - testes em watch mode
+## Comportamento da API
 
-## Autenticação e autorização
+- Prefixo base: **`/api`**
+- Limite de taxa: **120 requisições por IP a cada 15 minutos** (resposta `429` quando excedido)
+- Segurança: Helmet, CORS, corpo JSON
 
-- A API usa JWT no header:
-  - `Authorization: Bearer <token>`
-- Login:
-  - `POST /api/auth/login`
-- Rotas protegidas usam:
-  - `authMiddleware` (valida token)
-  - `roleMiddleware` (valida perfil)
+## Rotas (resumo)
 
-Perfis usados atualmente:
+Todas abaixo são relativas a `/api`.
 
-- `root`
-- `admin`
-- `rh`
-- `colaborador`
-- `user`
+### Autenticação (`/auth`)
 
-## Rotas da API
+| Método | Caminho | Descrição |
+|--------|---------|-----------|
+| POST | `/auth/login` | Login |
 
-Base: `/api`
+### Usuários (`/user`)
 
-### Auth
+| Método | Caminho | Proteção |
+|--------|---------|----------|
+| GET | `/user` | JWT, papel `root` |
+| POST | `/user/:id_empresa` | JWT, papéis `admin`, `root` ou `rh` |
 
-- `POST /auth/login`
+### Empresa (`/empresa`)
 
-### User
+| Método | Caminho | Proteção |
+|--------|---------|----------|
+| GET | `/empresa/:id_empresa` | JWT |
+| POST | `/empresa` | JWT, `root` |
+| PUT | `/empresa/:id_empresa` | JWT, `admin`, `root` ou `rh` |
+| DELETE | `/empresa/:id_empresa` | JWT, `root` |
 
-- `GET /user` (autenticado)
-- `POST /user` (admin/root)
+### Colaborador (`/colaborador`)
 
-### Empresa
+| Método | Caminho | Proteção |
+|--------|---------|----------|
+| GET | `/colaborador/:id_empresa` | JWT, `admin`, `root` ou `rh` |
+| GET | `/colaborador/:id_empresa/:cpf` | JWT |
+| POST | `/colaborador/:id_empresa` | JWT, `admin`, `root` ou `rh` |
+| PUT | `/colaborador/:id_empresa/:id` | JWT, `admin`, `root` ou `rh` |
+| PATCH | `/colaborador/:id_empresa/:id/status` | JWT, `admin`, `root` ou `rh` |
 
-- `GET /empresa`
-- `GET /empresa/:id`
-- `POST /empresa` (admin/root/rh)
-- `PUT /empresa/:id` (admin/root/rh)
-- `DELETE /empresa/:id` (admin/root)
+### Ponto (`/ponto`)
 
-### Colaborador
+| Método | Caminho | Proteção |
+|--------|---------|----------|
+| GET | `/ponto/planilha/:id_empresa/:id_colaborador/:data_inicial/:data_final` | JWT (exportação CSV) |
+| GET | `/ponto/:id_empresa/:id_colaborador` | JWT |
+| POST | `/ponto/:id_empresa` | JWT, `admin`, `root`, `rh` ou `colaborador`; upload opcional de campo `foto` |
+| PUT | `/ponto/:id_empresa/:id` | JWT, `admin`, `root` ou `rh` |
+| DELETE | `/ponto/:id_empresa/:id` | JWT, `admin` ou `root` |
 
-- `GET /colaborador`
-- `GET /colaborador/:id`
-- `POST /colaborador` (admin/root/rh)
-- `PUT /colaborador/:id` (admin/root/rh)
-- `PATCH /colaborador/:id/status` (admin/root/rh)
+### Atestado (`/atestado`)
 
-### Ponto
+| Método | Caminho | Proteção |
+|--------|---------|----------|
+| GET | `/atestado/:id_empresa/:id_colaborador` | JWT |
+| POST | `/atestado/:id_empresa` | JWT, `admin`, `root`, `rh` ou `colaborador` |
+| PUT | `/atestado/:id_empresa/:id` | JWT, `admin`, `root` ou `rh` |
+| DELETE | `/atestado/:id_empresa/:id` | JWT, `admin` ou `root` |
 
-- `GET /ponto`
-- `GET /ponto/:id`
-- `POST /ponto` (admin/root/rh/colaborador)
-- `PUT /ponto/:id` (admin/root/rh)
-- `DELETE /ponto/:id` (admin/root)
+## Estrutura do código (visão geral)
 
-### Atestado
+- `src/server.ts` — entrada do servidor
+- `src/app.ts` — Express, middlewares globais e montagem de `/api`
+- `src/routes/` — rotas por domínio
+- `src/controllers/` — handlers HTTP
+- `src/services/` — regras de negócio
+- `src/models/` — acesso a dados MySQL
+- `src/middlewares/` — autenticação JWT, papéis, empresa, upload, erros
+- `src/config/` — configuração, banco, cache, JWT, storage, logs
 
-- `GET /atestado`
-- `GET /atestado/:id`
-- `POST /atestado` (admin/root/rh/colaborador)
-- `PUT /atestado/:id` (admin/root/rh)
-- `DELETE /atestado/:id` (admin/root)
-
-> Observação: no cadastro de atestado, `status` pode ser enviado; se não for enviado, o padrão é `pendente`.
-
-## Exemplo rápido de uso
-
-### 1) Login
-
-```bash
-curl -X POST "http://localhost:4000/api/auth/login" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "admin@temphora.com",
-    "password": "123456"
-  }'
-```
-
-### 2) Usar token em rota protegida
-
-```bash
-curl -X GET "http://localhost:4000/api/empresa" \
-  -H "Authorization: Bearer SEU_TOKEN_AQUI"
-```
-
-## Tratamento de erros
-
-- Erros de validação e negócio retornam status HTTP apropriado com mensagem.
-- Erros não tratados retornam `500`.
-
-## Testes
-
-```bash
-npm test
-```
+Logs rotativos podem ser gravados em `logs/` conforme a configuração do logger.
