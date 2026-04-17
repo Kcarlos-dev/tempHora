@@ -11,6 +11,11 @@ export interface PontoRecord {
   foto: string | null;
 }
 
+export interface PontoEmpresaRecord extends PontoRecord {
+  colaborador_nome: string | null;
+  colaborador_cpf: string | null;
+}
+
 const pontoModel = {
   async findAll(): Promise<PontoRecord[]> {
     const [rows] = await pool.execute<RowDataPacket[]>(
@@ -49,6 +54,46 @@ const pontoModel = {
     );
 
     return rows as PontoRecord[];
+  },
+
+  async countByEmpresa(id_empresa: number): Promise<number> {
+    const [rows] = await pool.execute<RowDataPacket[]>(
+      `SELECT COUNT(*) AS total
+       FROM ponto p
+       INNER JOIN colaborador c ON c.id = p.id_colaborador
+       WHERE c.id_empresa = ?`,
+      [id_empresa]
+    );
+    return Number((rows[0] as { total: number | string }).total ?? 0);
+  },
+
+  async findByEmpresaPaginated(
+    id_empresa: number,
+    limit: number,
+    offset: number
+  ): Promise<PontoEmpresaRecord[]> {
+    const safeLimit = Math.max(1, Math.min(200, Math.trunc(limit)));
+    const safeOffset = Math.max(0, Math.trunc(offset));
+    // LIMIT/OFFSET inseridos como números (após saneamento) — MySQL não permite placeholders aqui com execute().
+    const [rows] = await pool.query<RowDataPacket[]>(
+      `SELECT p.id,
+              p.id_colaborador,
+              p.tipo,
+              p.data_hora,
+              p.latitude,
+              p.longitude,
+              p.foto,
+              c.full_name AS colaborador_nome,
+              c.cpf       AS colaborador_cpf
+         FROM ponto p
+         INNER JOIN colaborador c ON c.id = p.id_colaborador
+         WHERE c.id_empresa = ?
+         ORDER BY p.data_hora DESC
+         LIMIT ${safeLimit} OFFSET ${safeOffset}`,
+      [id_empresa]
+    );
+
+    return rows as PontoEmpresaRecord[];
   },
 
   async findById(id: number): Promise<PontoRecord | null> {

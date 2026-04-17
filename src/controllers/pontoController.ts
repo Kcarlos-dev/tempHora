@@ -71,6 +71,27 @@ export async function getPontoByIdColaborador(req: Request, res: Response, next:
   }
 }
 
+export async function listPontosByEmpresa(req: Request, res: Response, next: NextFunction) {
+  try {
+    const idEmpresa = Number(req.params.id_empresa);
+    if (!idEmpresa || Number.isNaN(idEmpresa)) {
+      return res.status(400).json({ message: 'id_empresa inválido.' });
+    }
+
+    const page = Number(req.query.page ?? 1);
+    const pageSize = Number(req.query.pageSize ?? req.query.limit ?? 20);
+
+    const result = await pontoService.listByEmpresa(idEmpresa, page, pageSize);
+
+    return res.json({
+      ...result,
+      data: await attachFotoUrls(result.data),
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 export async function createPonto(req: Request, res: Response, next: NextFunction) {
   try {
     const { id_colaborador, tipo, data_hora, latitude, longitude } = req.body;

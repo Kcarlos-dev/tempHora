@@ -28,6 +28,25 @@ const pontoService = {
     return ponto;
   },
 
+  async listByEmpresa(id_empresa: number, page: number, pageSize: number) {
+    const safePage = Math.max(1, Math.trunc(page) || 1);
+    const safePageSize = Math.min(200, Math.max(1, Math.trunc(pageSize) || 20));
+    const offset = (safePage - 1) * safePageSize;
+
+    const [total, data] = await Promise.all([
+      pontoModel.countByEmpresa(id_empresa),
+      pontoModel.findByEmpresaPaginated(id_empresa, safePageSize, offset),
+    ]);
+
+    return {
+      data,
+      total,
+      page: safePage,
+      pageSize: safePageSize,
+      totalPages: Math.max(1, Math.ceil(total / safePageSize)),
+    };
+  },
+
   async getById(id: number) {
     const ponto = await pontoModel.findById(id);
 
