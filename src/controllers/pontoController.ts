@@ -127,7 +127,7 @@ export async function updatePonto(req: Request, res: Response, next: NextFunctio
       foto
     });
 
-    return res.json(ponto);
+    return res.json(await attachFotoUrl(ponto));
   } catch (error) {
     next(error);
   }
