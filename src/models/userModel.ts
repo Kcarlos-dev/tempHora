@@ -49,6 +49,22 @@ const userModel = {
     }
 
     return user;
+  },
+  async updatePassword(id_empresa: number, email: string, password: string) {
+
+    const [resultUser] = await pool.execute<RowDataPacket[]>(
+      'SELECT id_user, id_empresa from vw_users_colaboradores where id_empresa = ? and email = ?',
+      [id_empresa, email]
+    );
+    if (resultUser.length === 0) {
+      return null;
+    }
+    const passwordHash = await bcrypt.hash(password, 10);
+    const [result] = await pool.execute<RowDataPacket[]>(
+      'UPDATE users SET password_hash = ? WHERE  email = ?',
+      [passwordHash, email]
+    );
+    return result;
   }
 };
 

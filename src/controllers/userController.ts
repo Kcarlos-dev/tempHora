@@ -31,3 +31,16 @@ export async function createUser(req: Request, res: Response, next: NextFunction
     next(error);
   }
 }
+export async function updateUserPassword(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { id_empresa } = req.params;
+    const { password,email } = req.body;
+    if (!password || !id_empresa || !email) {
+      return res.status(400).json({ message: 'Todos os campos são obrigatórios.' });
+    }
+    const user = await userService.updateUserPassword(Number(id_empresa), email, password);
+    return res.json({ message: 'Senha atualizada com sucesso.', user: user });
+  } catch (error) {
+    next(error);
+  }
+}

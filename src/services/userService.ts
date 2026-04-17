@@ -52,6 +52,14 @@ const userService = {
       email: user.email,
       role: user.role
     };
+  },
+  
+  async updateUserPassword(id_empresa: number, email: string, password: string) {
+    const user = await userModel.updatePassword(id_empresa, email, password);
+    if (!user) {
+      throw new AppError('Usuário não encontrado ou não pertence a sua empresa', 404);
+    }
+    return user;
   }
 };
 
