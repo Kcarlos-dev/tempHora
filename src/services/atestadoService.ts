@@ -17,6 +17,16 @@ const atestadoService = {
 
     return atestado;
   },
+
+  async getByCpfColaborador(id_empresa: number, cpf: string) {
+    const atestado = await atestadoModel.findByCpf(id_empresa, cpf);
+
+    if (!atestado || atestado.length === 0) {
+      throw new AppError('Atestado não encontrado.', 404);
+    }
+
+    return atestado;
+  },
   
   async getById(id: number) {
     const atestado = await atestadoModel.findById(id);

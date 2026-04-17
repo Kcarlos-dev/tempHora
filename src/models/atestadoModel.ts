@@ -28,6 +28,18 @@ const atestadoModel = {
     return rows as AtestadoRecord[];
   },
 
+  async findByCpf(id_empresa: number, cpf: string): Promise<AtestadoRecord[]> {
+    const [rows] = await pool.execute<RowDataPacket[]>(
+      `SELECT a.id, a.id_colaborador, a.data_inicio, a.data_fim, a.arquivo, a.status
+       FROM atestados a
+       INNER JOIN colaborador c ON c.id = a.id_colaborador
+       WHERE c.id_empresa = ? AND c.cpf = ?`,
+      [id_empresa, cpf]
+    );
+
+    return rows as AtestadoRecord[];
+  },
+
   async findById(id: number): Promise<AtestadoRecord | null> {
     const [rows] = await pool.execute<RowDataPacket[]>(
       'SELECT id, id_colaborador, data_inicio, data_fim, arquivo, status FROM atestados WHERE id = ?',
