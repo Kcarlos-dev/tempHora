@@ -36,26 +36,29 @@ const checkCompany =  (req: Request, res: Response, next: NextFunction) => {
       if (!empresa){
           return res.status(403).json({ message: 'Empresa não fornecida.' });
       }
-      if(req.body.id_colaborador){
-         if(Number(req.body.id_colaborador) !== payload.colaboradorId){
-            return res.status(403).json({message: 'id do colaborador incoerente' })
-         }
-         req.user = { id: payload.userId, email: payload.email, role: payload.role };
-         return next();   
-      }
-      if(req.params.id_colaborador){
-        if(Number(req.params.id_colaborador) !== payload.colaboradorId){
-           return res.status(403).json({message: 'id do colaborador incoerente' })
-        }
-        req.user = { id: payload.userId, email: payload.email, role: payload.role };
-        return next();   
-     }
-      if(Number(payload.empresaId)  === Number(empresa)){
-          req.user = { id: payload.userId, email: payload.email, role: payload.role };
-          return next();
-      }else{
+
+      // A empresa é obrigatória e precisa bater com o token. Checa aqui, sempre,
+      // antes de qualquer regra sobre id_colaborador — assim ninguém consegue
+      // consultar dados de outra empresa só porque o id_colaborador "bate".
+      if(Number(payload.empresaId) !== Number(empresa)){
         return res.status(401).json({ message: 'Empresa inválida.' });
       }
+
+      // Regras de colaborador:
+      // - admin e rh podem operar sobre qualquer colaborador DA MESMA EMPRESA
+      //   (a checagem de empresa acima garante o escopo);
+      // - colaborador comum só pode operar sobre o próprio colaboradorId.
+      const GESTORES = ['admin', 'rh'];
+      const idColabRequest = req.body?.id_colaborador ?? req.params.id_colaborador;
+
+      if (idColabRequest && !GESTORES.includes(payload.role)) {
+        if (Number(idColabRequest) !== payload.colaboradorId) {
+          return res.status(403).json({ message: 'id do colaborador incoerente' });
+        }
+      }
+
+      req.user = { id: payload.userId, email: payload.email, role: payload.role };
+      return next();
     } catch (error) {
       return res.status(401).json({ message: 'Token inválido.' });
     }
