@@ -10,12 +10,17 @@ export interface ColaboradorRecord {
   phone: string | null;
   position: string | null;
   status: string;
+  foto: string | null;
 }
 
+const BASE_FIELDS =
+  'id, id_empresa, id_user, full_name, cpf, phone, position, status, foto';
+
 const colaboradorModel = {
-  async findAll(id_empresa:number): Promise<ColaboradorRecord[]> {
+  async findAll(id_empresa: number): Promise<ColaboradorRecord[]> {
     const [rows] = await pool.execute<RowDataPacket[]>(
-      'SELECT id, id_empresa, id_user, full_name, cpf, phone, position, status FROM colaborador WHERE id_empresa = ?',[id_empresa]
+      `SELECT ${BASE_FIELDS} FROM colaborador WHERE id_empresa = ?`,
+      [id_empresa]
     );
 
     return rows as ColaboradorRecord[];
@@ -23,27 +28,37 @@ const colaboradorModel = {
 
   async findById(id: number): Promise<ColaboradorRecord | null> {
     const [rows] = await pool.execute<RowDataPacket[]>(
-      'SELECT id, id_empresa, id_user, full_name, cpf, phone, position, status FROM colaborador WHERE id = ?',
+      `SELECT ${BASE_FIELDS} FROM colaborador WHERE id = ?`,
       [id]
     );
-    
+
     return rows.length ? (rows[0] as ColaboradorRecord) : null;
   },
-  
-  async findByCpf(cpf:string): Promise<ColaboradorRecord | null> {
+
+  async findByCpf(cpf: string): Promise<ColaboradorRecord | null> {
     const [rows] = await pool.execute<RowDataPacket[]>(
-      'SELECT id, id_empresa, id_user, full_name, cpf, phone, position, status FROM colaborador WHERE cpf = ?',
+      `SELECT ${BASE_FIELDS} FROM colaborador WHERE cpf = ?`,
       [cpf]
     );
 
     return rows.length ? (rows[0] as ColaboradorRecord) : null;
   },
-  async create(data: Omit<ColaboradorRecord, 'id'>): Promise<ColaboradorRecord> {
+
+  async create(data: Omit<ColaboradorRecord, 'id' | 'foto'> & { foto?: string | null }): Promise<ColaboradorRecord> {
     const [result] = await pool.execute<ResultSetHeader>(
       `INSERT INTO colaborador
-        (id_empresa, id_user, full_name, cpf, phone, position, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [data.id_empresa, data.id_user, data.full_name, data.cpf, data.phone, data.position, data.status]
+        (id_empresa, id_user, full_name, cpf, phone, position, status, foto)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        data.id_empresa,
+        data.id_user,
+        data.full_name,
+        data.cpf,
+        data.phone,
+        data.position,
+        data.status,
+        data.foto ?? null,
+      ]
     );
 
     const colaborador = await this.findById(result.insertId);
@@ -55,7 +70,12 @@ const colaboradorModel = {
     return colaborador;
   },
 
-  async update(id: number, data: Omit<ColaboradorRecord, 'id'>): Promise<ColaboradorRecord | null> {
+  async update(
+    id: number,
+    data: Omit<ColaboradorRecord, 'id' | 'foto'>
+  ): Promise<ColaboradorRecord | null> {
+    // A foto é atualizada por fluxo próprio (updateFoto) — mantemos aqui os
+    // campos de cadastro e preservamos o `foto` já persistido no banco.
     await pool.execute<ResultSetHeader>(
       `UPDATE colaborador
        SET id_empresa = ?, id_user = ?, full_name = ?, cpf = ?, phone = ?, position = ?, status = ?
@@ -68,6 +88,11 @@ const colaboradorModel = {
 
   async updateStatus(id: number, status: string): Promise<ColaboradorRecord | null> {
     await pool.execute<ResultSetHeader>('UPDATE colaborador SET status = ? WHERE id = ?', [status, id]);
+    return this.findById(id);
+  },
+
+  async updateFoto(id: number, foto: string | null): Promise<ColaboradorRecord | null> {
+    await pool.execute<ResultSetHeader>('UPDATE colaborador SET foto = ? WHERE id = ?', [foto, id]);
     return this.findById(id);
   },
 

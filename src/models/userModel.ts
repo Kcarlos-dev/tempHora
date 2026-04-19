@@ -4,21 +4,36 @@ import pool from '../config/database';
 
 export interface UserRecord {
   id: number;
-  id_user:number,
-  id_empresa: number,
-  id_colaborador:number,
+  id_user: number;
+  id_empresa: number;
+  id_colaborador: number;
   name: string;
+  full_name: string | null;
+  cpf: string | null;
   email: string;
   password_hash: string;
   role: string;
-  status:string
+  status: string;
+  foto: string | null;
 }
+
+const VIEW_FIELDS =
+  'id_user, id_empresa, id_colaborador, name, full_name, cpf, email, password_hash, role, status, foto';
 
 const userModel = {
   async findByEmail(email: string): Promise<UserRecord | null> {
     const [rows] = await pool.execute<RowDataPacket[]>(
-      'SELECT id_user,id_empresa,id_colaborador,email,password_hash,role, status FROM vw_users_colaboradores WHERE 1 = 1 AND email = ?',
+      `SELECT ${VIEW_FIELDS} FROM vw_users_colaboradores WHERE email = ?`,
       [email]
+    );
+
+    return rows.length ? (rows[0] as UserRecord) : null;
+  },
+
+  async findProfileByUserId(id_user: number): Promise<UserRecord | null> {
+    const [rows] = await pool.execute<RowDataPacket[]>(
+      `SELECT ${VIEW_FIELDS} FROM vw_users_colaboradores WHERE id_user = ?`,
+      [id_user]
     );
 
     return rows.length ? (rows[0] as UserRecord) : null;
@@ -50,8 +65,8 @@ const userModel = {
 
     return user;
   },
-  async updatePassword(id_empresa: number, email: string, password: string) {
 
+  async updatePassword(id_empresa: number, email: string, password: string) {
     const [resultUser] = await pool.execute<RowDataPacket[]>(
       'SELECT id_user, id_empresa from vw_users_colaboradores where id_empresa = ? and email = ?',
       [id_empresa, email]

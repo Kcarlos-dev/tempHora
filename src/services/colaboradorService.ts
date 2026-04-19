@@ -44,8 +44,18 @@ const colaboradorService = {
       cpf: data.cpf ?? null,
       phone: data.phone ?? null,
       position: data.position ?? null,
-      status: data.status ?? 'ativo'
+      status: data.status ?? 'ativo',
+      foto: null,
     });
+  },
+
+  async updateFoto(id: number, foto: string | null) {
+    await this.getById(id);
+    const updated = await colaboradorModel.updateFoto(id, foto);
+    if (!updated) {
+      throw new AppError('Colaborador não encontrado.', 404);
+    }
+    return updated;
   },
 
   async update(

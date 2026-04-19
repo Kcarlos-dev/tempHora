@@ -84,14 +84,18 @@ create table atestados
         foreign key (id_colaborador) references colaborador (id)
 );
 
-create view vw_users_colaboradores as
+create or replace view vw_users_colaboradores as
 select `u`.`id`            AS `id_user`,
        `c`.`id_empresa`    AS `id_empresa`,
        `c`.`id`            AS `id_colaborador`,
+       `u`.`name`          AS `name`,
+       `c`.`full_name`     AS `full_name`,
+       `c`.`cpf`           AS `cpf`,
        `u`.`email`         AS `email`,
        `u`.`password_hash` AS `password_hash`,
        `u`.`role`          AS `role`,
-       `c`.`status`        AS `status`
+       `c`.`status`        AS `status`,
+       `c`.`foto`          AS `foto`
 from (`temphora`.`users` `u` left join `temphora`.`colaborador` `c` on ((`u`.`id` = `c`.`id_user`)));
 ```
 

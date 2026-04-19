@@ -1,6 +1,7 @@
 import cacheClient, { connectCache } from '../config/cache';
 import userModel from '../models/userModel';
 import AppError from '../utils/AppError';
+import { generateSignedUrl } from '../utils/gcs';
 
 const CACHE_PREFIX = 'user_profile:';
 
@@ -60,7 +61,31 @@ const userService = {
       throw new AppError('Usuário não encontrado ou não pertence a sua empresa', 404);
     }
     return user;
-  }
+  },
+
+  async getMe(userId: number) {
+    const user = await userModel.findProfileByUserId(userId);
+
+    if (!user) {
+      throw new AppError('Usuário não encontrado.', 404);
+    }
+
+    const foto_url = await generateSignedUrl(user.foto ?? null);
+
+    return {
+      id_user: user.id_user,
+      id_empresa: user.id_empresa,
+      id_colaborador: user.id_colaborador,
+      name: user.name,
+      full_name: user.full_name,
+      cpf: user.cpf,
+      email: user.email,
+      role: user.role,
+      status: user.status,
+      foto: user.foto,
+      foto_url,
+    };
+  },
 };
 
 export default userService;

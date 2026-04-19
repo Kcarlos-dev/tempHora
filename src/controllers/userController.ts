@@ -16,6 +16,21 @@ export async function getUser(req: Request, res: Response, next: NextFunction) {
   }
 }
 
+export async function getMe(req: Request, res: Response, next: NextFunction) {
+  try {
+    const userId = Number(req.user?.id);
+
+    if (!userId) {
+      return res.status(401).json({ message: 'Usuário não autenticado.' });
+    }
+
+    const me = await userService.getMe(userId);
+    return res.json(me);
+  } catch (error) {
+    next(error);
+  }
+}
+
 export async function createUser(req: Request, res: Response, next: NextFunction) {
   try {
     const { email, password, name, role } = req.body;
