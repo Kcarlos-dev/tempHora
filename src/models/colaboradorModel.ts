@@ -17,9 +17,21 @@ const BASE_FIELDS =
   'id, id_empresa, id_user, full_name, cpf, phone, position, status, foto';
 
 const colaboradorModel = {
-  async findAll(id_empresa: number): Promise<ColaboradorRecord[]> {
-    const [rows] = await pool.execute<RowDataPacket[]>(
-      `SELECT ${BASE_FIELDS} FROM colaborador WHERE id_empresa = ?`,
+  // Listagem paginada. `limit` e `offset` já vêm sanitizados pelo service.
+  // Pedimos `limit + 1` para detectar hasMore sem precisar de COUNT(*).
+  async findAll(
+    id_empresa: number,
+    limit: number,
+    offset: number,
+  ): Promise<ColaboradorRecord[]> {
+    const safeLimit = Math.max(1, Math.min(200, Math.trunc(limit)));
+    const safeOffset = Math.max(0, Math.trunc(offset));
+    const [rows] = await pool.query<RowDataPacket[]>(
+      `SELECT ${BASE_FIELDS}
+         FROM colaborador
+         WHERE id_empresa = ?
+         ORDER BY id DESC
+         LIMIT ${safeLimit} OFFSET ${safeOffset}`,
       [id_empresa]
     );
 

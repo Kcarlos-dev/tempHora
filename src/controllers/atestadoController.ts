@@ -41,13 +41,18 @@ export async function getAtestadoByCpfColaborador(req: Request, res: Response, n
   try {
     const id_empresa = Number(req.params.id_empresa);
     const cpf = req.params.cpf;
+    const page = Number(req.query.page ?? 1);
+    const pageSize = Number(req.query.pageSize ?? req.query.limit ?? 10);
 
     if (!cpf) {
       return res.status(400).json({ message: 'cpf é obrigatório.' });
     }
 
-    const atestado = await atestadoService.getByCpfColaborador(id_empresa, cpf);
-    return res.json(await attachArquivoUrls(atestado));
+    const result = await atestadoService.getByCpfColaborador(id_empresa, cpf, page, pageSize);
+    return res.json({
+      ...result,
+      data: await attachArquivoUrls(result.data),
+    });
   } catch (error) {
     next(error);
   }

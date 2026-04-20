@@ -47,9 +47,19 @@ const pontoModel = {
     return rows as PontoRecord[];
   },
 
-  async findByIdColaborador(id: number): Promise<PontoRecord[]> {
-    const [rows] = await pool.execute<RowDataPacket[]>(
-      'SELECT id, id_colaborador, tipo, data_hora, latitude, longitude, foto FROM ponto WHERE id_colaborador = ?',
+  async findByIdColaborador(
+    id: number,
+    limit: number,
+    offset: number,
+  ): Promise<PontoRecord[]> {
+    const safeLimit = Math.max(1, Math.min(200, Math.trunc(limit)));
+    const safeOffset = Math.max(0, Math.trunc(offset));
+    const [rows] = await pool.query<RowDataPacket[]>(
+      `SELECT id, id_colaborador, tipo, data_hora, latitude, longitude, foto
+         FROM ponto
+         WHERE id_colaborador = ?
+         ORDER BY data_hora DESC
+         LIMIT ${safeLimit} OFFSET ${safeOffset}`,
       [id]
     );
 

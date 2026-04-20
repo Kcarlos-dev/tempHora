@@ -28,12 +28,21 @@ const atestadoModel = {
     return rows as AtestadoRecord[];
   },
 
-  async findByCpf(id_empresa: number, cpf: string): Promise<AtestadoRecord[]> {
-    const [rows] = await pool.execute<RowDataPacket[]>(
+  async findByCpf(
+    id_empresa: number,
+    cpf: string,
+    limit: number,
+    offset: number,
+  ): Promise<AtestadoRecord[]> {
+    const safeLimit = Math.max(1, Math.min(200, Math.trunc(limit)));
+    const safeOffset = Math.max(0, Math.trunc(offset));
+    const [rows] = await pool.query<RowDataPacket[]>(
       `SELECT a.id, a.id_colaborador, a.data_inicio, a.data_fim, a.arquivo, a.status
-       FROM atestados a
-       INNER JOIN colaborador c ON c.id = a.id_colaborador
-       WHERE c.id_empresa = ? AND c.cpf = ?`,
+         FROM atestados a
+         INNER JOIN colaborador c ON c.id = a.id_colaborador
+         WHERE c.id_empresa = ? AND c.cpf = ?
+         ORDER BY a.data_inicio DESC
+         LIMIT ${safeLimit} OFFSET ${safeOffset}`,
       [id_empresa, cpf]
     );
 

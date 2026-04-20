@@ -64,8 +64,14 @@ export async function getCsvPontoColaborador(req: Request, res: Response, next: 
 export async function getPontoByIdColaborador(req: Request, res: Response, next: NextFunction) {
   try {
     const id = Number(req.params.id_colaborador);
-    const pontos = await pontoService.getByIdColaborador(id);
-    return res.json(await attachFotoUrls(pontos));
+    const page = Number(req.query.page ?? 1);
+    const pageSize = Number(req.query.pageSize ?? req.query.limit ?? 10);
+
+    const result = await pontoService.getByIdColaborador(id, page, pageSize);
+    return res.json({
+      ...result,
+      data: await attachFotoUrls(result.data),
+    });
   } catch (error) {
     next(error);
   }

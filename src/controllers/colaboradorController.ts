@@ -14,9 +14,12 @@ async function attachFotoUrl<T extends { foto?: string | null }>(
 
 export async function listColaboradores(req: Request, res: Response, next: NextFunction) {
   try {
-    const id_empresa = Number(req.params.id_empresa)
-    const colaboradores = await colaboradorService.list(id_empresa);
-    return res.json(colaboradores);
+    const id_empresa = Number(req.params.id_empresa);
+    const page = Number(req.query.page ?? 1);
+    const pageSize = Number(req.query.pageSize ?? req.query.limit ?? 10);
+
+    const result = await colaboradorService.list(id_empresa, page, pageSize);
+    return res.json(result);
   } catch (error) {
     next(error);
   }

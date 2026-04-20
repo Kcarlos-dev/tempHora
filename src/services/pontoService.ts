@@ -1,7 +1,18 @@
 import pontoModel from '../models/pontoModel';
 import AppError from '../utils/AppError';
 
+const DEFAULT_PAGE_SIZE = 10;
+const MAX_PAGE_SIZE = 200;
 
+function normalizePagination(page?: number, pageSize?: number) {
+  const safePage = Math.max(1, Math.trunc(Number(page)) || 1);
+  const safePageSize = Math.min(
+    MAX_PAGE_SIZE,
+    Math.max(1, Math.trunc(Number(pageSize)) || DEFAULT_PAGE_SIZE),
+  );
+  const offset = (safePage - 1) * safePageSize;
+  return { page: safePage, pageSize: safePageSize, offset };
+}
 
 const pontoService = {
   async list() {
@@ -18,14 +29,19 @@ const pontoService = {
     return ponto;
   },
 
-  async getByIdColaborador(id: number) {
-    const ponto = await pontoModel.findByIdColaborador(id);
-
-    if (!ponto) {
-      throw new AppError('Registro de ponto não encontrado.', 404);
-    }
-
-    return ponto;
+  // Paginação simples: pede `pageSize + 1` ao banco; se vier o extra, hasMore=true
+  // (evita COUNT(*) custoso em tabelas grandes).
+  async getByIdColaborador(id: number, page?: number, pageSize?: number) {
+    const p = normalizePagination(page, pageSize);
+    const rows = await pontoModel.findByIdColaborador(id, p.pageSize + 1, p.offset);
+    const hasMore = rows.length > p.pageSize;
+    const data = hasMore ? rows.slice(0, p.pageSize) : rows;
+    return {
+      data,
+      page: p.page,
+      pageSize: p.pageSize,
+      hasMore,
+    };
   },
 
   async listByEmpresa(id_empresa: number, page: number, pageSize: number) {

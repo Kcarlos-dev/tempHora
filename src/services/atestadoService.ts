@@ -3,6 +3,19 @@ import AppError from '../utils/AppError';
 
 const ALLOWED_STATUS = ['pendente', 'aprovado', 'rejeitado'];
 
+const DEFAULT_PAGE_SIZE = 10;
+const MAX_PAGE_SIZE = 200;
+
+function normalizePagination(page?: number, pageSize?: number) {
+  const safePage = Math.max(1, Math.trunc(Number(page)) || 1);
+  const safePageSize = Math.min(
+    MAX_PAGE_SIZE,
+    Math.max(1, Math.trunc(Number(pageSize)) || DEFAULT_PAGE_SIZE),
+  );
+  const offset = (safePage - 1) * safePageSize;
+  return { page: safePage, pageSize: safePageSize, offset };
+}
+
 const atestadoService = {
   async list() {
     return atestadoModel.findAll();
@@ -18,14 +31,25 @@ const atestadoService = {
     return atestado;
   },
 
-  async getByCpfColaborador(id_empresa: number, cpf: string) {
-    const atestado = await atestadoModel.findByCpf(id_empresa, cpf);
-
-    if (!atestado || atestado.length === 0) {
-      throw new AppError('Atestado não encontrado.', 404);
-    }
-
-    return atestado;
+  // Paginação simples: pede `pageSize + 1` ao banco; se vier o extra, hasMore=true.
+  // Diferente de antes, NÃO retorna 404 quando vazio — a UI lida com lista vazia
+  // (antes o 404 forçava o front a um hack de try/catch).
+  async getByCpfColaborador(
+    id_empresa: number,
+    cpf: string,
+    page?: number,
+    pageSize?: number,
+  ) {
+    const p = normalizePagination(page, pageSize);
+    const rows = await atestadoModel.findByCpf(id_empresa, cpf, p.pageSize + 1, p.offset);
+    const hasMore = rows.length > p.pageSize;
+    const data = hasMore ? rows.slice(0, p.pageSize) : rows;
+    return {
+      data,
+      page: p.page,
+      pageSize: p.pageSize,
+      hasMore,
+    };
   },
   
   async getById(id: number) {
