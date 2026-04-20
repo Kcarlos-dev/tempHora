@@ -105,6 +105,21 @@ const pontoModel = {
     return rows.length ? (rows[0] as PontoRecord) : null;
   },
 
+  // Retorna o id_empresa ao qual um registro de ponto pertence (via colaborador).
+  // Usado para impedir IDOR cross-tenant em update/delete pelo :id do ponto.
+  async findEmpresaById(id: number): Promise<number | null> {
+    const [rows] = await pool.execute<RowDataPacket[]>(
+      `SELECT c.id_empresa
+         FROM ponto p
+         INNER JOIN colaborador c ON c.id = p.id_colaborador
+         WHERE p.id = ?
+         LIMIT 1`,
+      [id]
+    );
+    if (!rows.length) return null;
+    return Number(rows[0].id_empresa);
+  },
+
   async create(data: Omit<PontoRecord, 'id'>): Promise<PontoRecord> {
     const [result] = await pool.execute<ResultSetHeader>(
       `INSERT INTO ponto

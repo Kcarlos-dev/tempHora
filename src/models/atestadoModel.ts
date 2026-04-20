@@ -49,6 +49,21 @@ const atestadoModel = {
     return rows.length ? (rows[0] as AtestadoRecord) : null;
   },
 
+  // Retorna o id_empresa ao qual um atestado pertence (via colaborador).
+  // Usado para impedir IDOR cross-tenant em update/delete pelo :id do atestado.
+  async findEmpresaById(id: number): Promise<number | null> {
+    const [rows] = await pool.execute<RowDataPacket[]>(
+      `SELECT c.id_empresa
+         FROM atestados a
+         INNER JOIN colaborador c ON c.id = a.id_colaborador
+         WHERE a.id = ?
+         LIMIT 1`,
+      [id]
+    );
+    if (!rows.length) return null;
+    return Number(rows[0].id_empresa);
+  },
+
   async create(data: Omit<AtestadoRecord, 'id'>): Promise<AtestadoRecord> {
     const [result] = await pool.execute<ResultSetHeader>(
       'INSERT INTO atestados (id_colaborador, data_inicio, data_fim, arquivo, status) VALUES (?, ?, ?, ?, ?)',

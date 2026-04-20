@@ -133,13 +133,20 @@ export async function createPonto(req: Request, res: Response, next: NextFunctio
 export async function updatePonto(req: Request, res: Response, next: NextFunction) {
   try {
     const id = Number(req.params.id);
+    const id_empresa = Number(req.params.id_empresa);
     const { id_colaborador, tipo, data_hora, latitude, longitude, foto } = req.body;
 
+    if (!id || Number.isNaN(id)) {
+      return res.status(400).json({ message: 'id do ponto inválido.' });
+    }
+    if (!id_empresa || Number.isNaN(id_empresa)) {
+      return res.status(400).json({ message: 'id_empresa inválido.' });
+    }
     if (!id_colaborador || !tipo || !data_hora) {
       return res.status(400).json({ message: 'id_colaborador, tipo e data_hora são obrigatórios.' });
     }
 
-    const ponto = await pontoService.update(id, {
+    const ponto = await pontoService.update(id, id_empresa, {
       id_colaborador: Number(id_colaborador),
       tipo,
       data_hora,
@@ -157,7 +164,16 @@ export async function updatePonto(req: Request, res: Response, next: NextFunctio
 export async function deletePonto(req: Request, res: Response, next: NextFunction) {
   try {
     const id = Number(req.params.id);
-    await pontoService.remove(id);
+    const id_empresa = Number(req.params.id_empresa);
+
+    if (!id || Number.isNaN(id)) {
+      return res.status(400).json({ message: 'id do ponto inválido.' });
+    }
+    if (!id_empresa || Number.isNaN(id_empresa)) {
+      return res.status(400).json({ message: 'id_empresa inválido.' });
+    }
+
+    await pontoService.remove(id, id_empresa);
     return res.status(204).send();
   } catch (error) {
     next(error);

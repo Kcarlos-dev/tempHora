@@ -57,6 +57,19 @@ const pontoService = {
     return ponto;
   },
 
+  // Garante que o ponto de `id` pertence à empresa `id_empresa`. Sem isso, um
+  // admin da empresa A consegue passar o próprio id_empresa na URL e mexer em
+  // um ponto cujo `:id` é de outra empresa (IDOR entre tenants).
+  async assertBelongsToEmpresa(id: number, id_empresa: number) {
+    const empresaDoPonto = await pontoModel.findEmpresaById(id);
+    if (empresaDoPonto === null) {
+      throw new AppError('Registro de ponto não encontrado.', 404);
+    }
+    if (empresaDoPonto !== Number(id_empresa)) {
+      throw new AppError('Registro de ponto não pertence à empresa informada.', 403);
+    }
+  },
+
   async create(data: {
     id_colaborador: number;
     tipo: string;
@@ -78,6 +91,7 @@ const pontoService = {
 
   async update(
     id: number,
+    id_empresa: number,
     data: {
       id_colaborador: number;
       tipo: string;
@@ -87,8 +101,7 @@ const pontoService = {
       foto?: string | null;
     }
   ) {
-    await this.getById(id);
-
+    await this.assertBelongsToEmpresa(id, id_empresa);
 
     const updated = await pontoModel.update(id, {
       id_colaborador: data.id_colaborador,
@@ -106,8 +119,8 @@ const pontoService = {
     return updated;
   },
 
-  async remove(id: number) {
-    await this.getById(id);
+  async remove(id: number, id_empresa: number) {
+    await this.assertBelongsToEmpresa(id, id_empresa);
     await pontoModel.remove(id);
   }
 };

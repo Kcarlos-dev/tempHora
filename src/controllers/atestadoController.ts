@@ -93,13 +93,20 @@ export async function createAtestado(req: Request, res: Response, next: NextFunc
 export async function updateAtestado(req: Request, res: Response, next: NextFunction) {
   try {
     const id = Number(req.params.id);
+    const id_empresa = Number(req.params.id_empresa);
     const { id_colaborador, data_inicio, data_fim, arquivo, status } = req.body;
 
+    if (!id || Number.isNaN(id)) {
+      return res.status(400).json({ message: 'id do atestado inválido.' });
+    }
+    if (!id_empresa || Number.isNaN(id_empresa)) {
+      return res.status(400).json({ message: 'id_empresa inválido.' });
+    }
     if (!id_colaborador || !data_inicio || !data_fim) {
       return res.status(400).json({ message: 'id_colaborador, data_inicio e data_fim são obrigatórios.' });
     }
 
-    const atestado = await atestadoService.update(id, {
+    const atestado = await atestadoService.update(id, id_empresa, {
       id_colaborador: Number(id_colaborador),
       data_inicio,
       data_fim,
@@ -116,7 +123,16 @@ export async function updateAtestado(req: Request, res: Response, next: NextFunc
 export async function deleteAtestado(req: Request, res: Response, next: NextFunction) {
   try {
     const id = Number(req.params.id);
-    await atestadoService.remove(id);
+    const id_empresa = Number(req.params.id_empresa);
+
+    if (!id || Number.isNaN(id)) {
+      return res.status(400).json({ message: 'id do atestado inválido.' });
+    }
+    if (!id_empresa || Number.isNaN(id_empresa)) {
+      return res.status(400).json({ message: 'id_empresa inválido.' });
+    }
+
+    await atestadoService.remove(id, id_empresa);
     return res.status(204).send();
   } catch (error) {
     next(error);
