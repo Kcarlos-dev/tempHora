@@ -32,8 +32,8 @@ const colaboradorService = {
     };
   },
 
-  async getByCpf(cpf:string) {
-    const colaborador = await colaboradorModel.findByCpf(cpf);
+  async getByCpf(id_empresa: number, cpf: string) {
+    const colaborador = await colaboradorModel.findByEmpresaAndCpf(id_empresa, cpf);
 
     if (!colaborador) {
       throw new AppError('Colaborador não encontrado.', 404);

@@ -27,8 +27,17 @@ export async function listColaboradores(req: Request, res: Response, next: NextF
 
 export async function getColaboradorByCpf(req: Request, res: Response, next: NextFunction) {
   try {
-    const cpf:string = req.params.cpf ;
-    const colaborador = await colaboradorService.getByCpf(cpf);
+    const id_empresa = Number(req.params.id_empresa);
+    const cpf = req.params.cpf;
+
+    if (!Number.isFinite(id_empresa) || id_empresa <= 0) {
+      return res.status(400).json({ message: 'id_empresa inválido.' });
+    }
+    if (!cpf || !String(cpf).trim()) {
+      return res.status(400).json({ message: 'cpf é obrigatório.' });
+    }
+
+    const colaborador = await colaboradorService.getByCpf(id_empresa, cpf);
     return res.json(colaborador);
   } catch (error) {
     next(error);

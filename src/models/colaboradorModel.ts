@@ -47,10 +47,13 @@ const colaboradorModel = {
     return rows.length ? (rows[0] as ColaboradorRecord) : null;
   },
 
-  async findByCpf(cpf: string): Promise<ColaboradorRecord | null> {
+  async findByEmpresaAndCpf(
+    id_empresa: number,
+    cpf: string,
+  ): Promise<ColaboradorRecord | null> {
     const [rows] = await pool.execute<RowDataPacket[]>(
-      `SELECT ${BASE_FIELDS} FROM colaborador WHERE cpf = ?`,
-      [cpf]
+      `SELECT ${BASE_FIELDS} FROM colaborador WHERE id_empresa = ? AND cpf = ?`,
+      [id_empresa, cpf],
     );
 
     return rows.length ? (rows[0] as ColaboradorRecord) : null;
