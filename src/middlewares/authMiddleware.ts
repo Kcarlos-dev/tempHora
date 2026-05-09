@@ -55,7 +55,7 @@ const checkCompany = async (req: Request, res: Response, next: NextFunction) => 
       // - colaborador comum só pode operar sobre o próprio colaboradorId;
       // - em AMBOS os casos, o colaborador alvo precisa REALMENTE pertencer à
       //   empresa da URL — consulta o banco pra evitar IDOR entre empresas.
-      const GESTORES = ['admin', 'rh'];
+      const GESTORES = ['admin', 'rh', 'kiosk'];
       const idColabRequestRaw = req.body?.id_colaborador ?? req.params.id_colaborador;
 
       if (idColabRequestRaw !== undefined && idColabRequestRaw !== null && idColabRequestRaw !== '') {
