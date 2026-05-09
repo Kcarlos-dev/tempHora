@@ -1,7 +1,10 @@
 import crypto from 'crypto';
 import path from 'path';
 import { NextFunction, Request, Response } from 'express';
+import FormData from 'form-data';
 import colaboradorService from '../services/colaboradorService';
+import RequisicaoApiFace from '../services/axiosService';
+import config from '../config/index';
 import { bucket } from '../config/storage';
 import { generateSignedUrl } from '../utils/gcs';
 
@@ -129,7 +132,14 @@ export async function uploadFotoColaborador(req: Request, res: Response, next: N
       contentType: file.mimetype,
       resumable: false,
     });
+    const form = new FormData();
+    form.append('file', file.buffer, {
+      filename: file.originalname || 'foto.jpg',
+      contentType: file.mimetype || 'image/jpeg',
+    });
+    form.append('id_colaborador', String(id_colaborador));
 
+    const response = await RequisicaoApiFace.post(`${config.temphoraApiFace.url}/embedding`, form);
     const fotoPath = `gs://${bucket.name}/${filename}`;
     const colaborador = await colaboradorService.updateFoto(id_colaborador, fotoPath);
 

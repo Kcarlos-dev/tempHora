@@ -53,7 +53,10 @@ const config = {
     allowedOrigins: env.ALLOWED_ORIGINS
       ? env.ALLOWED_ORIGINS.split(',')
       : ['http://localhost:3000']
-  }
+  },
+  temphoraApiFace: {
+    url: env.TEMPHORA_API_FACE,
+  },
 };
 
 export default config;
