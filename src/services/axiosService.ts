@@ -1,14 +1,16 @@
 import axios from 'axios';
+import FormData from 'form-data';
 
 const RequisicaoApiFace = {
-    
-  async post(url: string, data: any) {
-    try {
-      const response = await axios.post(url, data);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+  async post(url: string, data: unknown) {
+    const isForm = data instanceof FormData;
+    const response = await axios.post(url, data as FormData | Record<string, unknown>, {
+      headers: isForm ? (data as FormData).getHeaders() : undefined,
+      timeout: 120_000,
+      maxBodyLength: Infinity,
+      maxContentLength: Infinity,
+    });
+    return response.data;
   },
 };
 
