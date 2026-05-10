@@ -57,7 +57,10 @@ const checkCompany = async (req: Request, res: Response, next: NextFunction) => 
       //   empresa da URL — consulta o banco pra evitar IDOR entre empresas.
       const GESTORES = ['admin', 'rh', 'kiosk'];
       const idColabRequestRaw = req.body?.id_colaborador ?? req.params.id_colaborador;
-
+      if(payload.status === "inativo"){
+        return res.status(403).json({message:'Você não está em atividade'})
+      }
+      
       if (idColabRequestRaw !== undefined && idColabRequestRaw !== null && idColabRequestRaw !== '') {
         const idColab = Number(idColabRequestRaw);
         if (!Number.isFinite(idColab) || idColab <= 0) {
