@@ -16,6 +16,17 @@ export interface PontoEmpresaRecord extends PontoRecord {
   colaborador_cpf: string | null;
 }
 
+export interface PontoCsvSourceRecord {
+  id_colaborador: number;
+  cpf: string | null;
+  full_name: string | null;
+  position: string | null;
+  tipo: string;
+  latitude: number | null;
+  longitude: number | null;
+  data_hora: string;
+}
+
 const pontoModel = {
   async findAll(): Promise<PontoRecord[]> {
     const [rows] = await pool.execute<RowDataPacket[]>(
@@ -25,7 +36,7 @@ const pontoModel = {
     return rows as PontoRecord[];
   },
 
-  async findByIdCsv(id:number,data_inicial:string, data_final:string): Promise<PontoRecord[]>{
+  async findByIdCsv(id:number,data_inicial:string, data_final:string): Promise<PontoCsvSourceRecord[]>{
     const [rows] = await pool.execute<RowDataPacket[]>(
       `
       select p.id_colaborador,
@@ -44,7 +55,7 @@ const pontoModel = {
       [id,data_inicial,data_final]
     );
 
-    return rows as PontoRecord[];
+    return rows as PontoCsvSourceRecord[];
   },
 
   async findByIdColaborador(

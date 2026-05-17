@@ -14,19 +14,52 @@ function normalizePagination(page?: number, pageSize?: number) {
   return { page: safePage, pageSize: safePageSize, offset };
 }
 
+function buildGoogleMapsLink(
+  latitude: number | null | undefined,
+  longitude: number | null | undefined,
+): string {
+  if (latitude == null || longitude == null) return '';
+  const lat = Number(latitude);
+  const lng = Number(longitude);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return '';
+  return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+}
+
+export type PontoCsvRow = {
+  id_colaborador: number;
+  cpf: string | null;
+  full_name: string | null;
+  position: string | null;
+  tipo: string;
+  data_hora: string;
+  link_google_maps: string;
+};
+
 const pontoService = {
   async list() {
     return pontoModel.findAll();
   },
 
-  async getCsvByIdColaborador(id:number,data_inicial:string, data_final:string){
-    const ponto = await pontoModel.findByIdCsv(id,data_inicial, data_final)
+  async getCsvByIdColaborador(
+    id: number,
+    data_inicial: string,
+    data_final: string,
+  ): Promise<PontoCsvRow[]> {
+    const pontos = await pontoModel.findByIdCsv(id, data_inicial, data_final);
 
-    if (!ponto) {
+    if (!pontos) {
       throw new AppError('Registro de ponto não encontrado.', 404);
     }
-    
-    return ponto;
+
+    return pontos.map((p) => ({
+      id_colaborador: p.id_colaborador,
+      cpf: p.cpf,
+      full_name: p.full_name,
+      position: p.position,
+      tipo: p.tipo,
+      data_hora: p.data_hora,
+      link_google_maps: buildGoogleMapsLink(p.latitude, p.longitude),
+    }));
   },
 
   // Paginação simples: pede `pageSize + 1` ao banco; se vier o extra, hasMore=true

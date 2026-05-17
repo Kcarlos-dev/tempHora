@@ -49,7 +49,17 @@ export async function getCsvPontoColaborador(req: Request, res: Response, next: 
     if(ponto.length <= 0){
         return res.status(401).json({message:'Não possue ponto registrado'})
     }
-    const parser = new Parser();
+    const parser = new Parser({
+      fields: [
+        { label: 'id_colaborador', value: 'id_colaborador' },
+        { label: 'cpf', value: 'cpf' },
+        { label: 'nome', value: 'full_name' },
+        { label: 'cargo', value: 'position' },
+        { label: 'tipo', value: 'tipo' },
+        { label: 'data_hora', value: 'data_hora' },
+        { label: 'link_google_maps', value: 'link_google_maps' },
+      ],
+    });
     const csv = parser.parse(ponto);
 
     res.header("Content-Type", "text/csv");
