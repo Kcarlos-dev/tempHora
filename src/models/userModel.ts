@@ -5,7 +5,7 @@ import pool from '../config/database';
 export interface UserRecord {
   id: number;
   id_user: number;
-  id_empresa: number;
+  id_empresa: number | null;
   id_colaborador: number;
   name: string;
   full_name: string | null;
@@ -41,19 +41,25 @@ const userModel = {
 
   async findById(id: number): Promise<UserRecord | null> {
     const [rows] = await pool.execute<RowDataPacket[]>(
-      'SELECT id, name, email, password_hash, role FROM users WHERE id = ?',
+      'SELECT id, name, email, password_hash, role, id_empresa FROM users WHERE id = ?',
       [id]
     );
 
     return rows.length ? (rows[0] as UserRecord) : null;
   },
 
-  async create(data: { email: string; password: string; name: string; role: string }): Promise<UserRecord> {
+  async create(data: {
+    email: string;
+    password: string;
+    name: string;
+    role: string;
+    id_empresa: number;
+  }): Promise<UserRecord> {
     const passwordHash = await bcrypt.hash(data.password, 10);
 
     const [result] = await pool.execute<RowDataPacket[]>(
-      'INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)',
-      [data.name, data.email, passwordHash, data.role]
+      'INSERT INTO users (name, email, password_hash, role, id_empresa) VALUES (?, ?, ?, ?, ?)',
+      [data.name, data.email, passwordHash, data.role, data.id_empresa]
     );
 
     const insertedId = (result as any).insertId;

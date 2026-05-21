@@ -22,8 +22,11 @@ create table users
     email         varchar(255) not null,
     password_hash varchar(255) not null,
     role          varchar(50)  not null,
+    id_empresa    int          null,
     constraint uq_user_email
-        unique (email)
+        unique (email),
+    constraint fk_users_empresa
+        foreign key (id_empresa) references empresa (id)
 );
 
 create table empresa

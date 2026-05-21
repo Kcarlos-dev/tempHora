@@ -34,13 +34,18 @@ export async function getMe(req: Request, res: Response, next: NextFunction) {
 export async function createUser(req: Request, res: Response, next: NextFunction) {
   try {
     const { email, password, name, role } = req.body;
+    const id_empresa = Number(req.params.id_empresa);
+
     if (!email || !password || !name) {
       return res.status(400).json({ message: 'Email, senha e nome são obrigatórios.' });
-    } 
+    }
+    if (!Number.isFinite(id_empresa) || id_empresa <= 0) {
+      return res.status(400).json({ message: 'id_empresa inválido.' });
+    }
     if(role === "root"){
       return res.status(400).json({ message: 'root não é permitido' });
     }
-    const user = await userService.createUser({ email, password, name, role });
+    const user = await userService.createUser({ email, password, name, role, id_empresa });
     return res.status(201).json({ message: 'Usuário criado com sucesso.', user });
   } catch (error) {
     next(error);

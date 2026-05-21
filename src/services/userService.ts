@@ -31,8 +31,14 @@ const userService = {
     return result;
   },
 
-  async createUser(data: { email: string; password: string; name: string; role?: string }) {
-    const { email, password, name, role = 'user' } = data;
+  async createUser(data: {
+    email: string;
+    password: string;
+    name: string;
+    role?: string;
+    id_empresa: number;
+  }) {
+    const { email, password, name, role = 'user', id_empresa } = data;
 
     const existingUser = await userModel.findByEmail(email);
 
@@ -44,14 +50,16 @@ const userService = {
       email,
       password,
       name,
-      role
+      role,
+      id_empresa
     });
 
     return {
       id: user.id,
       name: user.name,
       email: user.email,
-      role: user.role
+      role: user.role,
+      id_empresa: user.id_empresa ?? null
     };
   },
   
